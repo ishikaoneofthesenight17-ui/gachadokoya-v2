@@ -1,0 +1,46 @@
+import type { Spot } from "./types";
+
+export const mockSpots: Spot[] = [
+  {
+    id: "demo-1",
+    shop_name: "ガチャガチャの森 新宿店",
+    address: "東京都新宿区新宿3丁目",
+    lat: 35.6902,
+    lng: 139.7020,
+    product_name: "ねこのかぶりもの ミニチュアコレクション",
+    maker: "キタンクラブ",
+    category: "猫・ミニチュア",
+    price: 400,
+    status: "found",
+    comment: "入口右側の島、上から2段目で確認。",
+    witnessed_at: new Date(Date.now() - 1000 * 60 * 35).toISOString(),
+  },
+  {
+    id: "demo-2",
+    shop_name: "カプセル楽局 池袋店",
+    address: "東京都豊島区東池袋1丁目",
+    lat: 35.7308,
+    lng: 139.7141,
+    product_name: "ちいかわ お座りぬいぐるみ",
+    maker: "バンダイ",
+    category: "キャラクター",
+    price: 500,
+    status: "low",
+    comment: "残り少なめ。夕方時点。",
+    witnessed_at: new Date(Date.now() - 1000 * 60 * 60 * 4).toISOString(),
+  },
+  {
+    id: "demo-3",
+    shop_name: "ヨドバシAkiba カプセルコーナー",
+    address: "東京都千代田区神田花岡町1-1",
+    lat: 35.6985,
+    lng: 139.7731,
+    product_name: "ポケットモンスター フィギュアコレクション",
+    maker: "タカラトミーアーツ",
+    category: "アニメ・ゲーム",
+    price: 300,
+    status: "soldout",
+    comment: "台紙はあるが中身なし。",
+    witnessed_at: new Date(Date.now() - 1000 * 60 * 60 * 20).toISOString(),
+  }
+];
