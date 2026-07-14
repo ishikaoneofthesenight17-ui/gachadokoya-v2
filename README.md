@@ -1,25 +1,36 @@
-# ガチャドコヤ 完成版たたき台
+This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 
-## 入っている機能
-- 地図とカード一覧の2画面
-- 商品名・キャラ名・メーカー・店舗・住所の横断検索
-- 猫／ねこ／ネコなどの表記ゆれ検索
-- 「あった・残り少なめ・なかった」の状態絞り込み
-- 新しい順／見つかる可能性順
-- 店舗・商品詳細ドロワー
-- Googleマップへの導線
-- 目撃情報投稿フォーム
-- Supabase未接続でもデモ表示
-- スマホ対応
+## Getting Started
 
-## 置き換え手順
-1. このフォルダの中身を既存プロジェクトへコピーするか、新規プロジェクトとしてGitHubへアップロード。
-2. `.env.local.example` を `.env.local` に変更。
-3. SupabaseのURLとPublishable Keyを入力。
-4. Supabase SQL Editorで `supabase/schema.sql` を実行。
-5. `npm install`
-6. `npm run dev`
-7. Vercelにも同じ環境変数を登録してデプロイ。
+First, run the development server:
 
-## 注意
-公開前には、誰でも無制限投稿できるRLSを、ログイン・投稿回数制限・不適切投稿対策つきへ変更してください。
+```bash
+npm run dev
+# or
+yarn dev
+# or
+pnpm dev
+# or
+bun dev
+```
+
+Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+
+You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+
+This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+
+## Learn More
+
+To learn more about Next.js, take a look at the following resources:
+
+- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
+- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+
+You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+
+## Deploy on Vercel
+
+The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+
+Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
