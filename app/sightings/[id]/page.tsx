@@ -31,10 +31,15 @@ export default function SightingDetailPage() {
   const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState("");
   const [saved, setSaved] = useState(false);
+  const [helped, setHelped] = useState(false);
+  const [helpedCount, setHelpedCount] = useState(0);
 
   useEffect(() => {
     const stored = JSON.parse(localStorage.getItem("gachadokoya_favorites") || "[]") as string[];
     setSaved(stored.includes(params.id));
+    const helpedIds = JSON.parse(localStorage.getItem("gachadokoya_helped") || "[]") as string[];
+    setHelped(helpedIds.includes(params.id));
+    setHelpedCount(Number(localStorage.getItem(`gachadokoya_helped_count_${params.id}`) || "0"));
     async function load() {
       const { data, error } = await supabase.from("sightings").select("id,status,sighted_at,comment,photo_url,products(*),locations(*)").eq("id", params.id).single();
       if (error || !data) { setMessage("目撃情報を読み込めませんでした"); setLoading(false); return; }
@@ -56,6 +61,17 @@ export default function SightingDetailPage() {
     const next = current.includes(params.id) ? current.filter((id) => id !== params.id) : [params.id, ...current];
     localStorage.setItem("gachadokoya_favorites", JSON.stringify(next));
     setSaved(next.includes(params.id));
+  }
+
+  function toggleHelped() {
+    const current = JSON.parse(localStorage.getItem("gachadokoya_helped") || "[]") as string[];
+    const wasHelped = current.includes(params.id);
+    const next = wasHelped ? current.filter((id) => id !== params.id) : [params.id, ...current];
+    const nextCount = Math.max(0, helpedCount + (wasHelped ? -1 : 1));
+    localStorage.setItem("gachadokoya_helped", JSON.stringify(next));
+    localStorage.setItem(`gachadokoya_helped_count_${params.id}`, String(nextCount));
+    setHelped(!wasHelped);
+    setHelpedCount(nextCount);
   }
 
   async function share() {
@@ -84,16 +100,16 @@ export default function SightingDetailPage() {
           {image ? <img src={image} alt={item.products?.name || "ガチャ商品"} className="aspect-square h-full w-full bg-white object-contain" /> : <div className="flex aspect-square items-center justify-center bg-gradient-to-br from-yellow-100 to-pink-100"><img src="/subchan/thanks.png" alt="サブちゃん" className="h-48 w-48 object-contain" /></div>}
           <div className="p-6 md:p-8">
             <p className="text-xs font-black tracking-widest text-pink-500">SIGHTING DETAIL</p>
-            <h1 className="mt-2 text-3xl font-black leading-tight">{item.products?.name || "商品名未登録"}</h1>
+            <h1 className="mt-2 text-3xl font-black leading-tight">{item.products?.id ? <Link href={`/products/${item.products.id}`} className="underline decoration-yellow-300 decoration-4 underline-offset-4">{item.products?.name || "商品名未登録"}</Link> : item.products?.name || "商品名未登録"}</h1>
             {productMeta && <p className="mt-3 text-sm font-bold leading-6 text-zinc-500">{productMeta}</p>}
             <div className="mt-6 flex flex-wrap gap-2"><span className={`rounded-full px-4 py-2 text-sm font-black ${scoreTone(score)}`}>{scoreText(score)}・{score}%</span><span className={`rounded-full px-4 py-2 text-sm font-black ${statusTone(item.status)}`}>{statusLabel(item.status)}</span></div>
             <div className="mt-6 rounded-3xl bg-zinc-50 p-5"><p className="text-xs font-bold text-zinc-500">最終目撃</p><p className="mt-1 text-lg font-black">{formatDate(item.sighted_at)}</p>{item.comment && <p className="mt-4 border-t border-zinc-200 pt-4 text-sm leading-7">{item.comment}</p>}</div>
-            <Link href={postHref} className="mt-5 block rounded-full bg-pink-500 px-5 py-4 text-center text-lg font-black text-white shadow">この商品を今見た！</Link>
+            <div className="mt-5 grid gap-3 sm:grid-cols-2"><button onClick={toggleHelped} className={`rounded-full px-5 py-4 text-center text-lg font-black shadow ${helped ? "bg-yellow-300 text-zinc-900" : "bg-zinc-100 text-zinc-900"}`}>{helped ? `助かった！済み ${helpedCount}` : `助かった！ ${helpedCount}`}</button><Link href={postHref} className="block rounded-full bg-pink-500 px-5 py-4 text-center text-lg font-black text-white shadow">この商品を今見た！</Link></div>
           </div>
         </div>
 
         <div className="mt-5 overflow-hidden rounded-[2rem] bg-white shadow-xl">
-          <div className="p-6"><p className="text-xs font-black text-pink-500">SPOT</p><h2 className="mt-1 text-2xl font-black">{item.locations?.name || "店舗名未登録"}</h2>{item.locations?.address && <p className="mt-3 text-sm text-zinc-600">{item.locations.address}</p>}{item.locations?.nearest_station && <p className="mt-1 text-sm font-bold text-zinc-600">最寄り：{item.locations.nearest_station}</p>}</div>
+          <div className="p-6"><p className="text-xs font-black text-pink-500">SPOT</p><h2 className="mt-1 text-2xl font-black">{item.locations?.id ? <Link href={`/locations/${item.locations.id}`} className="underline decoration-yellow-300 decoration-4 underline-offset-4">{item.locations?.name || "店舗名未登録"}</Link> : item.locations?.name || "店舗名未登録"}</h2>{item.locations?.address && <p className="mt-3 text-sm text-zinc-600">{item.locations.address}</p>}{item.locations?.nearest_station && <p className="mt-1 text-sm font-bold text-zinc-600">最寄り：{item.locations.nearest_station}</p>}</div>
           {maps && <><iframe title="店舗地図" src={maps.embed} className="h-72 w-full border-0" loading="lazy" referrerPolicy="no-referrer-when-downgrade"/><div className="grid gap-3 p-4 sm:grid-cols-2"><a href={maps.open} target="_blank" rel="noreferrer" className="rounded-full bg-zinc-900 px-5 py-4 text-center font-black text-white">Googleマップで開く</a><Link href={postHref} className="rounded-full bg-yellow-300 px-5 py-4 text-center font-black">この場所の今を報告</Link></div></>}
         </div>
 
