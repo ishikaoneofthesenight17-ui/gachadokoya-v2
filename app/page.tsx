@@ -158,10 +158,12 @@ export default function Home() {
   const [isLoading, setIsLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState("");
   const [favorites, setFavorites] = useState<string[]>([]);
+  const [helped, setHelped] = useState<string[]>([]);
   const [recentSearches, setRecentSearches] = useState<string[]>([]);
 
   useEffect(() => {
     setFavorites(JSON.parse(localStorage.getItem("gachadokoya_favorites") || "[]"));
+    setHelped(JSON.parse(localStorage.getItem("gachadokoya_helped") || "[]"));
     setRecentSearches(JSON.parse(localStorage.getItem("gachadokoya_recent_searches") || "[]"));
 
     async function loadSightings() {
@@ -193,6 +195,12 @@ export default function Home() {
     const next = favorites.includes(id) ? favorites.filter((item) => item !== id) : [id, ...favorites];
     setFavorites(next);
     localStorage.setItem("gachadokoya_favorites", JSON.stringify(next));
+  }
+
+  function toggleHelped(id: string) {
+    const next = helped.includes(id) ? helped.filter((item) => item !== id) : [id, ...helped];
+    setHelped(next);
+    localStorage.setItem("gachadokoya_helped", JSON.stringify(next));
   }
 
   function handleGetLocation() {
@@ -250,7 +258,7 @@ export default function Home() {
     <main className="min-h-screen bg-[#fff9dc] pb-28 text-black">
       <section className="mx-auto max-w-md px-4 py-6">
         <header className="text-center">
-          <p className="text-sm font-black tracking-widest text-pink-500">GACHA SIGHTING MAP</p>
+          <div className="flex items-center justify-center gap-2"><p className="text-sm font-black tracking-widest text-pink-500">GACHA SIGHTING MAP</p><span className="rounded-full bg-zinc-900 px-2 py-1 text-[10px] font-black text-white">v6</span></div>
           <h1 className="mt-1 text-4xl font-black tracking-tight">ガチャドコヤ</h1>
           <p className="mt-2 font-bold text-zinc-700">欲しいガチャ、どこにある？</p>
         </header>
@@ -353,15 +361,25 @@ export default function Home() {
                   {image && <img src={image} alt={item.products?.name || 'ガチャ商品'} className="h-44 w-full bg-white object-contain" />}
                   <div className="p-4">
                     <div className="flex items-start gap-3">
-                      <Link href={`/sightings/${item.id}`} className="min-w-0 flex-1">
-                        <p className="text-lg font-black">{item.products?.name || '商品名未登録'}</p>
+                      <div className="min-w-0 flex-1">
+                        {item.products?.id ? (
+                          <Link href={`/products/${item.products.id}`} className="block text-lg font-black underline decoration-yellow-300 decoration-4 underline-offset-4">
+                            {item.products?.name || '商品名未登録'}
+                          </Link>
+                        ) : (
+                          <p className="text-lg font-black">{item.products?.name || '商品名未登録'}</p>
+                        )}
                         {meta && <p className="mt-1 line-clamp-2 text-xs font-bold text-zinc-500">{meta}</p>}
-                      </Link>
+                      </div>
                       <button onClick={() => toggleFavorite(item.id)} aria-label="保存" className={`grid h-10 w-10 shrink-0 place-items-center rounded-full text-xl ${isFavorite ? 'bg-pink-100' : 'bg-zinc-100'}`}>{isFavorite ? '★' : '☆'}</button>
                     </div>
-                    <Link href={`/sightings/${item.id}`}>
+                    {item.locations?.id ? (
+                      <Link href={`/locations/${item.locations.id}`} className="mt-3 block text-sm font-black underline decoration-yellow-300 decoration-4 underline-offset-4">📍 {item.locations?.name}</Link>
+                    ) : (
                       <p className="mt-3 text-sm font-bold">📍 {item.locations?.name}</p>
-                      {item.locations?.address && <p className="mt-1 text-xs text-zinc-500">{item.locations.address}</p>}
+                    )}
+                    {item.locations?.address && <p className="mt-1 text-xs text-zinc-500">{item.locations.address}</p>}
+                    <Link href={`/sightings/${item.id}`} className="block">
                       <div className="mt-3 flex flex-wrap gap-2">
                         {currentCoords && sortMode === "near" && index === 0 && <span className="rounded-full bg-yellow-200 px-3 py-1 text-xs font-black">最寄り</span>}
                         <span className={`rounded-full px-3 py-1 text-xs font-black ${likelihoodTone(score)}`}>{likelihoodText(score)}</span>
@@ -372,6 +390,12 @@ export default function Home() {
                       {item.comment && <p className="mt-3 rounded-2xl bg-zinc-50 p-3 text-sm leading-6">{item.comment}</p>}
                       <p className="mt-4 border-t border-zinc-100 pt-3 text-right text-sm font-black text-pink-500">詳しい場所・地図を見る →</p>
                     </Link>
+                    <div className="mt-3 grid grid-cols-2 gap-2">
+                      <button onClick={() => toggleHelped(item.id)} className={`rounded-full px-4 py-3 text-sm font-black ${helped.includes(item.id) ? 'bg-yellow-300' : 'bg-zinc-100'}`}>
+                        {helped.includes(item.id) ? '助かった！済み' : '助かった！'}
+                      </button>
+                      <Link href={`/post?product=${encodeURIComponent(item.products?.id || '')}&location=${encodeURIComponent(item.locations?.id || '')}`} className="rounded-full bg-pink-500 px-4 py-3 text-center text-sm font-black text-white">今見た！</Link>
+                    </div>
                   </div>
                 </article>
               );

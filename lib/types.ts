@@ -2,6 +2,8 @@ export type StockStatus = "found" | "low" | "soldout" | "unknown";
 
 export type Spot = {
   id: string;
+  product_id?: string | null;
+  location_id?: string | null;
   shop_name: string;
   address: string;
   lat: number;
