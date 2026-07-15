@@ -35,6 +35,7 @@ type Sighting = {
   status: string;
   sighted_at: string;
   comment: string | null;
+  is_demo?: boolean | null;
   photo_url?: string | null;
   products: Product | null;
   locations: Location | null;
@@ -387,9 +388,11 @@ export default function Home() {
                         <span className="rounded-full bg-zinc-100 px-3 py-1 text-xs font-bold">{formatDate(item.sighted_at)}</span>
                         {km !== null && <span className="rounded-full bg-sky-100 px-3 py-1 text-xs font-bold">約{km.toFixed(1)}km</span>}
                       </div>
-                      {item.comment && <p className="mt-3 rounded-2xl bg-zinc-50 p-3 text-sm leading-6">{item.comment}</p>}
-                      <p className="mt-4 border-t border-zinc-100 pt-3 text-right text-sm font-black text-pink-500">詳しい場所・地図を見る →</p>
-                    </Link>
+{item.comment && !item.is_demo && (
+  <p className="mt-3 rounded-2xl bg-zinc-50 p-3 text-sm leading-6">
+    {item.comment}
+  </p>
+)}                    </Link>
                     <div className="mt-3 grid grid-cols-2 gap-2">
                       <button onClick={() => toggleHelped(item.id)} className={`rounded-full px-4 py-3 text-sm font-black ${helped.includes(item.id) ? 'bg-yellow-300' : 'bg-zinc-100'}`}>
                         {helped.includes(item.id) ? '助かった！済み' : '助かった！'}
