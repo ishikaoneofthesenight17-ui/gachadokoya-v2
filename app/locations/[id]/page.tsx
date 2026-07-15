@@ -97,7 +97,7 @@ export default function LocationPage() {
         supabase.from("locations").select("*").eq("id", params.id).single(),
         supabase
           .from("sightings")
-          .select("id,status,sighted_at,comment,photo_url,products(*)")
+          .select("id,status,sighted_at,comment,photo_url,is_demo,products(*)")
           .eq("location_id", params.id)
           .order("sighted_at", { ascending: false }),
       ]);
