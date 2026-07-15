@@ -171,8 +171,7 @@ export default function Home() {
       setIsLoading(true);
       const { data, error } = await supabase
         .from("sightings")
-        .select(`id,status,sighted_at,comment,photo_url,products(*),locations(*)`)
-        .order("sighted_at", { ascending: false });
+.select("id,status,sighted_at,comment,is_demo,photo_url,products(*),locations(*)")        .order("sighted_at", { ascending: false });
       if (error) {
         console.error(error);
         setErrorMessage("目撃情報を読み込めませんでした");
