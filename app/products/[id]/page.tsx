@@ -32,6 +32,7 @@ type Sighting = {
   status: string;
   sighted_at: string;
   comment?: string | null;
+  is_demo?: boolean | null;
   photo_url?: string | null;
   locations: Location | null;
 };
@@ -156,7 +157,7 @@ export default function ProductPage() {
               <Link key={item.id} href={`/sightings/${item.id}`} className="block rounded-3xl border border-zinc-200 p-4 hover:bg-yellow-50">
                 <div className="flex items-start justify-between gap-3"><div><p className="font-black">{item.locations?.name || "店舗名未登録"}</p>{item.locations?.address && <p className="mt-1 text-xs text-zinc-500">{item.locations.address}</p>}</div><span className={`shrink-0 rounded-full px-3 py-1 text-xs font-black ${statusTone(item.status)}`}>{statusLabel(item.status)}</span></div>
                 <p className="mt-2 text-xs font-bold text-zinc-500">{formatDate(item.sighted_at)}</p>
-                {item.comment && <p className="mt-3 rounded-2xl bg-zinc-50 p-3 text-sm">{item.comment}</p>}
+                {item.comment && !item.is_demo && <p className="mt-3 rounded-2xl bg-zinc-50 p-3 text-sm">{item.comment}</p>}
               </Link>
             ))}
           </div>

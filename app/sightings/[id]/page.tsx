@@ -12,7 +12,7 @@ const supabase = createClient(
 
 type Product = { id?: string; name?: string; maker?: string | null; genre?: string | null; work_title?: string | null; character_name?: string | null; creator?: string | null; image_url?: string | null };
 type Location = { id?: string; name?: string; address?: string | null; nearest_station?: string | null; latitude?: number | null; longitude?: number | null };
-type Sighting = { id: string; status: string; sighted_at: string; comment: string | null; photo_url?: string | null; products: Product | null; locations: Location | null };
+type Sighting = { id: string; status: string; sighted_at: string; comment: string | null;is_demo?: boolean | null; photo_url?: string | null; products: Product | null; locations: Location | null };
 
 function statusLabel(status: string) { if (status === "plenty") return "残り多そう"; if (status === "available") return "まだあった"; if (status === "low") return "少なそう"; if (status === "sold_out") return "なかった"; return status; }
 function statusTone(status: string) { if (status === "sold_out") return "bg-zinc-200 text-zinc-700"; if (status === "low") return "bg-orange-100 text-orange-700"; if (status === "plenty") return "bg-emerald-100 text-emerald-700"; return "bg-pink-100 text-pink-600"; }
@@ -103,7 +103,7 @@ export default function SightingDetailPage() {
             <h1 className="mt-2 text-3xl font-black leading-tight">{item.products?.id ? <Link href={`/products/${item.products.id}`} className="underline decoration-yellow-300 decoration-4 underline-offset-4">{item.products?.name || "商品名未登録"}</Link> : item.products?.name || "商品名未登録"}</h1>
             {productMeta && <p className="mt-3 text-sm font-bold leading-6 text-zinc-500">{productMeta}</p>}
             <div className="mt-6 flex flex-wrap gap-2"><span className={`rounded-full px-4 py-2 text-sm font-black ${scoreTone(score)}`}>{scoreText(score)}・{score}%</span><span className={`rounded-full px-4 py-2 text-sm font-black ${statusTone(item.status)}`}>{statusLabel(item.status)}</span></div>
-            <div className="mt-6 rounded-3xl bg-zinc-50 p-5"><p className="text-xs font-bold text-zinc-500">最終目撃</p><p className="mt-1 text-lg font-black">{formatDate(item.sighted_at)}</p>{item.comment && <p className="mt-4 border-t border-zinc-200 pt-4 text-sm leading-7">{item.comment}</p>}</div>
+            <div className="mt-6 rounded-3xl bg-zinc-50 p-5"><p className="text-xs font-bold text-zinc-500">最終目撃</p><p className="mt-1 text-lg font-black">{formatDate(item.sighted_at)}</p>{item.comment && !item.is_demo && <p className="mt-4 border-t border-zinc-200 pt-4 text-sm leading-7">{item.comment}</p>}</div>
             <div className="mt-5 grid gap-3 sm:grid-cols-2"><button onClick={toggleHelped} className={`rounded-full px-5 py-4 text-center text-lg font-black shadow ${helped ? "bg-yellow-300 text-zinc-900" : "bg-zinc-100 text-zinc-900"}`}>{helped ? `助かった！済み ${helpedCount}` : `助かった！ ${helpedCount}`}</button><Link href={postHref} className="block rounded-full bg-pink-500 px-5 py-4 text-center text-lg font-black text-white shadow">この商品を今見た！</Link></div>
           </div>
         </div>
