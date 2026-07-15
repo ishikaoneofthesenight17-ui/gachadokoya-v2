@@ -33,6 +33,7 @@ type Sighting = {
   sighted_at: string;
   comment?: string | null;
   photo_url?: string | null;
+  is_demo?: boolean | null;
   products: Product | null;
 };
 
@@ -214,7 +215,11 @@ export default function LocationPage() {
                     <p className="mt-1 text-xs text-zinc-500">報告 {reports}件</p>
                   </div>
                 </div>
-                {latest.comment && <p className="mx-4 mb-3 rounded-2xl bg-zinc-50 p-3 text-sm leading-6">{latest.comment}</p>}
+{latest.comment && !latest.is_demo && (
+  <p className="mx-4 mb-3 rounded-2xl bg-zinc-50 p-3 text-sm leading-6">
+    {latest.comment}
+  </p>
+)}
                 <div className="grid grid-cols-2 border-t border-zinc-100">
                   <Link href={`/sightings/${latest.id}`} className="px-4 py-3 text-center text-sm font-black">詳細を見る</Link>
                   <Link href={`/post?product=${encodeURIComponent(product?.id || "")}&location=${encodeURIComponent(locationData.id)}`} className="bg-pink-500 px-4 py-3 text-center text-sm font-black text-white">今見た！</Link>
