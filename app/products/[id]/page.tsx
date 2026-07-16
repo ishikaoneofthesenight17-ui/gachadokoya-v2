@@ -77,7 +77,7 @@ export default function ProductPage() {
         supabase.from("products").select("*").eq("id", params.id).single(),
         supabase
           .from("sightings")
-          .select("id,status,sighted_at,comment,photo_url,locations(*)")
+          .select("id,status,sighted_at,comment,is_demo,photo_url,locations(*)")
           .eq("product_id", params.id)
           .order("sighted_at", { ascending: false }),
       ]);
