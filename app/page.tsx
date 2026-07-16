@@ -388,10 +388,10 @@ export default function Home() {
                         {km !== null && <span className="rounded-full bg-sky-100 px-3 py-1 text-xs font-bold">約{km.toFixed(1)}km</span>}
                       </div>
 {item.comment && !item.is_demo && (
-  <p className="mt-3 rounded-2xl bg-zinc-50 p-3 text-sm leading-6">
+  <p className="mt-4 border-t border-zinc-200 pt-4 text-sm leading-7">
     {item.comment}
   </p>
-)}                    </Link>
+)}          </Link>
                     <div className="mt-3 grid grid-cols-2 gap-2">
                       <button onClick={() => toggleHelped(item.id)} className={`rounded-full px-4 py-3 text-sm font-black ${helped.includes(item.id) ? 'bg-yellow-300' : 'bg-zinc-100'}`}>
                         {helped.includes(item.id) ? '助かった！済み' : '助かった！'}
