@@ -375,8 +375,10 @@ export default function PostPage() {
 
         <form
           className="mt-8 space-y-5 rounded-3xl bg-white p-5 shadow"
-          onSubmit={(event) => event.preventDefault()}
-        >
+onSubmit={(event) => {
+  event.preventDefault();
+  handleSubmit();
+}}        >
           <div>
             <label className="font-bold">商品</label>
             <select
@@ -451,8 +453,6 @@ export default function PostPage() {
           </div>
 
           <button
-            type="button"
-            onClick={handleSubmit}
             disabled={isSubmitting}
             className="w-full rounded-full bg-pink-500 p-4 text-lg font-black text-white disabled:opacity-60"
           >
@@ -496,9 +496,8 @@ export default function PostPage() {
             <p className="mt-4 text-center text-xs font-bold text-zinc-500">
               サブちゃんが声でもお礼します。
             </p>
-
             <button
-              type="button"
+              type="submit"
               onClick={handleShare}
               className="mt-5 w-full rounded-full bg-zinc-900 px-5 py-4 font-black text-white"
             >
