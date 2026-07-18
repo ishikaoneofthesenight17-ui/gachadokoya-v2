@@ -1,62 +1,22 @@
 "use client";
 
-import { createClient } from "@supabase/supabase-js";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
+import { GachaImage } from "@/components/ui/GachaImage";
+import { toggleStoredId } from "@/lib/browser-storage";
+import { useStoredValue } from "@/hooks/useStoredValue";
+import { googleMapsUrls, statusLabel, statusTone } from "@/lib/domain/sightings";
+import type { GachaLocation, Product, Sighting } from "@/lib/domain/types";
+import { requireSupabaseBrowser } from "@/lib/supabase";
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!
-);
-
-type Location = {
-  id: string;
-  name: string;
-  address?: string | null;
-  nearest_station?: string | null;
-  latitude?: number | null;
-  longitude?: number | null;
-};
-
-type Product = {
-  id?: string;
-  name?: string;
-  maker?: string | null;
-  genre?: string | null;
-  image_url?: string | null;
-};
-
-type Sighting = {
-  id: string;
-  status: string;
-  sighted_at: string;
-  comment?: string | null;
-  photo_url?: string | null;
-  is_demo?: boolean | null;
-  products: Product | null;
-};
+const supabase = requireSupabaseBrowser();
 
 type ProductSummary = {
   product: Product | null;
   latest: Sighting;
   reports: number;
 };
-
-function statusLabel(status: string) {
-  if (status === "plenty") return "残り多そう";
-  if (status === "available") return "まだあった";
-  if (status === "low") return "少なそう";
-  if (status === "sold_out") return "なかった";
-  return "状況不明";
-}
-
-function statusTone(status: string) {
-  if (status === "sold_out") return "bg-zinc-200 text-zinc-700";
-  if (status === "low") return "bg-orange-100 text-orange-700";
-  if (status === "plenty") return "bg-emerald-100 text-emerald-700";
-  return "bg-pink-100 text-pink-600";
-}
 
 function formatDate(value: string) {
   return new Date(value).toLocaleString("ja-JP", {
@@ -80,17 +40,20 @@ function relativeTime(value: string) {
 
 export default function LocationPage() {
   const params = useParams<{ id: string }>();
-  const [locationData, setLocationData] = useState<Location | null>(null);
+  const [locationData, setLocationData] = useState<GachaLocation | null>(null);
   const [sightings, setSightings] = useState<Sighting[]>([]);
   const [loading, setLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState("");
+  const [savedLocations] = useStoredValue<string[]>("gachadokoya_saved_locations", []);
   const [saved, setSaved] = useState(false);
   const [shareMessage, setShareMessage] = useState("");
 
   useEffect(() => {
-    const savedLocations = JSON.parse(localStorage.getItem("gachadokoya_saved_locations") || "[]") as string[];
-    setSaved(savedLocations.includes(params.id));
+    const frame = requestAnimationFrame(() => setSaved(savedLocations.includes(params.id)));
+    return () => cancelAnimationFrame(frame);
+  }, [params.id, savedLocations]);
 
+  useEffect(() => {
     async function load() {
       setLoading(true);
       setErrorMessage("");
@@ -107,30 +70,21 @@ export default function LocationPage() {
         console.error(locationError || sightingsError);
         setErrorMessage("店舗情報を読み込めませんでした。時間をおいてもう一度お試しください。");
       }
-      setLocationData((spot as Location | null) ?? null);
+      setLocationData((spot as GachaLocation | null) ?? null);
       setSightings((sightingData ?? []) as Sighting[]);
       setLoading(false);
     }
     load();
   }, [params.id]);
 
-  const maps = useMemo(() => {
-    if (!locationData) return null;
-    const query = typeof locationData.latitude === "number" && typeof locationData.longitude === "number"
-      ? `${locationData.latitude},${locationData.longitude}`
-      : locationData.address || locationData.name;
-    return {
-      embed: `https://www.google.com/maps?q=${encodeURIComponent(query)}&z=16&output=embed`,
-      open: `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(query)}`,
-    };
-  }, [locationData]);
+  const maps = useMemo(() => googleMapsUrls(locationData), [locationData]);
 
   const productSummaries = useMemo<ProductSummary[]>(() => {
     const grouped = new Map<string, ProductSummary>();
     for (const sighting of sightings) {
       const key = sighting.products?.id || sighting.products?.name || sighting.id;
       const current = grouped.get(key);
-      if (!current) grouped.set(key, { product: sighting.products, latest: sighting, reports: 1 });
+      if (!current) grouped.set(key, { product: sighting.products ?? null, latest: sighting, reports: 1 });
       else current.reports += 1;
     }
     return Array.from(grouped.values());
@@ -140,9 +94,7 @@ export default function LocationPage() {
   const latestSighting = sightings[0];
 
   function toggleSave() {
-    const current = JSON.parse(localStorage.getItem("gachadokoya_saved_locations") || "[]") as string[];
-    const next = current.includes(params.id) ? current.filter((id) => id !== params.id) : [params.id, ...current];
-    localStorage.setItem("gachadokoya_saved_locations", JSON.stringify(next));
+    const next = toggleStoredId("gachadokoya_saved_locations", params.id);
     setSaved(next.includes(params.id));
   }
 
@@ -180,8 +132,10 @@ export default function LocationPage() {
           <div className="p-6 md:p-8">
             <p className="text-xs font-black tracking-widest text-pink-500">GACHA SPOT</p>
             <h1 className="mt-2 text-3xl font-black leading-tight">{locationData.name}</h1>
+            <div className="mt-3 flex flex-wrap gap-2">{locationData.chain_name && <span className="rounded-full bg-pink-50 px-3 py-1 text-xs font-black text-pink-600">{locationData.chain_name}</span>}{locationData.prefecture && <span className="rounded-full bg-zinc-100 px-3 py-1 text-xs font-bold">{locationData.prefecture}</span>}{locationData.category && <span className="rounded-full bg-yellow-100 px-3 py-1 text-xs font-bold">{locationData.category}</span>}</div>
             {locationData.address && <p className="mt-4 text-sm font-bold text-zinc-600">📍 {locationData.address}</p>}
             {locationData.nearest_station && <p className="mt-1 text-sm font-bold text-zinc-600">🚉 {locationData.nearest_station}</p>}
+            {locationData.official_url && <a href={locationData.official_url} target="_blank" rel="noreferrer" className="mt-3 inline-block text-sm font-black text-pink-600 underline">公式店舗ページ ↗</a>}
 
             <div className="mt-5 grid grid-cols-3 gap-2">
               <div className="rounded-3xl bg-yellow-100 p-4 text-center"><p className="text-xs font-bold text-zinc-500">登録商品</p><p className="mt-1 text-2xl font-black">{productSummaries.length}</p></div>
@@ -208,7 +162,7 @@ export default function LocationPage() {
               const image = product?.image_url || latest.photo_url;
               return <article key={product?.id || latest.id} className="overflow-hidden rounded-3xl border border-zinc-200">
                 <div className="flex gap-4 p-4">
-                  <div className="grid h-24 w-24 shrink-0 place-items-center overflow-hidden rounded-2xl bg-zinc-50 text-3xl">{image ? <img src={image} alt={product?.name || "ガチャ商品"} className="h-full w-full object-contain"/> : "🎁"}</div>
+                  <div className="grid h-24 w-24 shrink-0 place-items-center overflow-hidden rounded-2xl bg-zinc-50 text-3xl">{image ? <GachaImage src={image} alt={product?.name || "ガチャ商品"} className="h-full w-full object-contain"/> : "🎁"}</div>
                   <div className="min-w-0 flex-1">
                     <div className="flex items-start justify-between gap-2"><div className="min-w-0">{product?.id ? <Link href={`/products/${product.id}`} className="font-black underline decoration-yellow-300 decoration-4 underline-offset-4">{product.name || "商品名未登録"}</Link> : <p className="font-black">{product?.name || "商品名未登録"}</p>}{product?.maker && <p className="mt-1 text-xs font-bold text-zinc-500">{product.maker}</p>}</div><span className={`shrink-0 rounded-full px-3 py-1 text-xs font-black ${statusTone(latest.status)}`}>{statusLabel(latest.status)}</span></div>
                     <p className="mt-3 text-xs font-black text-pink-500">最新：{relativeTime(latest.sighted_at)}</p>

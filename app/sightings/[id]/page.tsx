@@ -1,28 +1,22 @@
 "use client";
 
-import { createClient } from "@supabase/supabase-js";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
+import { GachaImage } from "@/components/ui/GachaImage";
+import { readLocalStorage, toggleStoredId, writeLocalStorage } from "@/lib/browser-storage";
+import { useStoredValue } from "@/hooks/useStoredValue";
+import { googleMapsUrls, productMetadata, statusLabel, statusTone } from "@/lib/domain/sightings";
+import type { Sighting } from "@/lib/domain/types";
+import { requireSupabaseBrowser } from "@/lib/supabase";
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!
-);
+const supabase = requireSupabaseBrowser();
 
-type Product = { id?: string; name?: string; maker?: string | null; genre?: string | null; work_title?: string | null; character_name?: string | null; creator?: string | null; image_url?: string | null };
-type Location = { id?: string; name?: string; address?: string | null; nearest_station?: string | null; latitude?: number | null; longitude?: number | null };
-type Sighting = { id: string; status: string; sighted_at: string; comment: string | null;is_demo?: boolean | null; photo_url?: string | null; products: Product | null; locations: Location | null };
-
-function statusLabel(status: string) { if (status === "plenty") return "残り多そう"; if (status === "available") return "まだあった"; if (status === "low") return "少なそう"; if (status === "sold_out") return "なかった"; return status; }
-function statusTone(status: string) { if (status === "sold_out") return "bg-zinc-200 text-zinc-700"; if (status === "low") return "bg-orange-100 text-orange-700"; if (status === "plenty") return "bg-emerald-100 text-emerald-700"; return "bg-pink-100 text-pink-600"; }
 function elapsedHours(dateText: string) { return Math.max(0, (Date.now() - new Date(dateText).getTime()) / 3_600_000); }
 function scoreOf(item: Sighting) { let score = item.status === "plenty" ? 86 : item.status === "available" ? 72 : item.status === "low" ? 38 : 8; const h = elapsedHours(item.sighted_at); if (h <= 1) score += 8; else if (h <= 6) score += 2; else if (h <= 24) score -= 6; else if (h <= 72) score -= 18; else score -= 32; return Math.min(95, Math.max(3, Math.round(score))); }
 function scoreText(score: number) { if (score >= 75) return "かなりありそう"; if (score >= 50) return "ありそう"; if (score >= 25) return "可能性は低め"; return "かなり低め"; }
 function scoreTone(score: number) { if (score >= 75) return "bg-emerald-500 text-white"; if (score >= 50) return "bg-yellow-300 text-zinc-900"; if (score >= 25) return "bg-orange-400 text-white"; return "bg-zinc-400 text-white"; }
 function formatDate(text: string) { return new Date(text).toLocaleString("ja-JP", { year: "numeric", month: "long", day: "numeric", hour: "2-digit", minute: "2-digit" }); }
-function meta(product: Product | null) { return [product?.work_title, product?.character_name, product?.genre, product?.creator, product?.maker].filter(Boolean).join(" / "); }
-function mapUrls(location: Location | null) { if (!location) return null; const hasCoords = typeof location.latitude === "number" && typeof location.longitude === "number"; const q = hasCoords ? `${location.latitude},${location.longitude}` : location.address || location.name || ""; if (!q) return null; return { embed: `https://www.google.com/maps?q=${encodeURIComponent(q)}&z=16&output=embed`, open: `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(q)}` }; }
 
 export default function SightingDetailPage() {
   const params = useParams<{ id: string }>();
@@ -30,16 +24,23 @@ export default function SightingDetailPage() {
   const [related, setRelated] = useState<Sighting[]>([]);
   const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState("");
+  const [favoriteIds] = useStoredValue<string[]>("gachadokoya_favorites", []);
+  const [helpedIds] = useStoredValue<string[]>("gachadokoya_helped", []);
+  const [storedHelpedCount] = useStoredValue<number>(`gachadokoya_helped_count_${params.id}`, 0);
   const [saved, setSaved] = useState(false);
   const [helped, setHelped] = useState(false);
   const [helpedCount, setHelpedCount] = useState(0);
 
   useEffect(() => {
-    const stored = JSON.parse(localStorage.getItem("gachadokoya_favorites") || "[]") as string[];
-    setSaved(stored.includes(params.id));
-    const helpedIds = JSON.parse(localStorage.getItem("gachadokoya_helped") || "[]") as string[];
-    setHelped(helpedIds.includes(params.id));
-    setHelpedCount(Number(localStorage.getItem(`gachadokoya_helped_count_${params.id}`) || "0"));
+    const frame = requestAnimationFrame(() => {
+      setSaved(favoriteIds.includes(params.id));
+      setHelped(helpedIds.includes(params.id));
+      setHelpedCount(storedHelpedCount);
+    });
+    return () => cancelAnimationFrame(frame);
+  }, [favoriteIds, helpedIds, params.id, storedHelpedCount]);
+
+  useEffect(() => {
     async function load() {
       const { data, error } = await supabase.from("sightings").select("id,status,sighted_at,comment,photo_url,products(*),locations(*)").eq("id", params.id).single();
       if (error || !data) { setMessage("目撃情報を読み込めませんでした"); setLoading(false); return; }
@@ -54,21 +55,19 @@ export default function SightingDetailPage() {
     load();
   }, [params.id]);
 
-  const maps = useMemo(() => mapUrls(item?.locations ?? null), [item]);
+  const maps = useMemo(() => googleMapsUrls(item?.locations), [item]);
 
   function toggleSave() {
-    const current = JSON.parse(localStorage.getItem("gachadokoya_favorites") || "[]") as string[];
-    const next = current.includes(params.id) ? current.filter((id) => id !== params.id) : [params.id, ...current];
-    localStorage.setItem("gachadokoya_favorites", JSON.stringify(next));
+    const next = toggleStoredId("gachadokoya_favorites", params.id);
     setSaved(next.includes(params.id));
   }
 
   function toggleHelped() {
-    const current = JSON.parse(localStorage.getItem("gachadokoya_helped") || "[]") as string[];
+    const current = readLocalStorage<string[]>("gachadokoya_helped", []);
     const wasHelped = current.includes(params.id);
     const next = wasHelped ? current.filter((id) => id !== params.id) : [params.id, ...current];
     const nextCount = Math.max(0, helpedCount + (wasHelped ? -1 : 1));
-    localStorage.setItem("gachadokoya_helped", JSON.stringify(next));
+    writeLocalStorage("gachadokoya_helped", next);
     localStorage.setItem(`gachadokoya_helped_count_${params.id}`, String(nextCount));
     setHelped(!wasHelped);
     setHelpedCount(nextCount);
@@ -88,7 +87,7 @@ export default function SightingDetailPage() {
 
   const score = scoreOf(item);
   const image = item.products?.image_url || item.photo_url;
-  const productMeta = meta(item.products);
+  const productMeta = productMetadata(item.products);
   const postHref = `/post?product=${encodeURIComponent(item.products?.id || "")}&location=${encodeURIComponent(item.locations?.id || "")}`;
 
   return (
@@ -97,7 +96,7 @@ export default function SightingDetailPage() {
         <div className="flex items-center justify-between gap-3"><Link href="/" className="text-sm font-black">← 検索結果へ</Link><div className="flex gap-2"><button onClick={share} className="rounded-full bg-white px-4 py-2 text-sm font-black shadow">共有</button><button onClick={toggleSave} className={`rounded-full px-4 py-2 text-sm font-black shadow ${saved ? "bg-pink-500 text-white" : "bg-white"}`}>{saved ? "★ 保存済み" : "☆ 保存"}</button></div></div>
 
         <div className="mt-4 grid overflow-hidden rounded-[2rem] bg-white shadow-xl md:grid-cols-2">
-          {image ? <img src={image} alt={item.products?.name || "ガチャ商品"} className="aspect-square h-full w-full bg-white object-contain" /> : <div className="flex aspect-square items-center justify-center bg-gradient-to-br from-yellow-100 to-pink-100"><img src="/subchan/thanks.png" alt="サブちゃん" className="h-48 w-48 object-contain" /></div>}
+          {image ? <GachaImage src={image} alt={item.products?.name || "ガチャ商品"} className="aspect-square h-full w-full bg-white object-contain" /> : <div className="flex aspect-square items-center justify-center bg-gradient-to-br from-yellow-100 to-pink-100"><GachaImage src="/subchan/thanks.png" alt="サブちゃん" className="h-48 w-48 object-contain" /></div>}
           <div className="p-6 md:p-8">
             <p className="text-xs font-black tracking-widest text-pink-500">SIGHTING DETAIL</p>
             <h1 className="mt-2 text-3xl font-black leading-tight">{item.products?.id ? <Link href={`/products/${item.products.id}`} className="underline decoration-yellow-300 decoration-4 underline-offset-4">{item.products?.name || "商品名未登録"}</Link> : item.products?.name || "商品名未登録"}</h1>

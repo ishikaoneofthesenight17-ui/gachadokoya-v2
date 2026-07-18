@@ -1,32 +1,16 @@
 "use client";
 
-import { createClient } from "@supabase/supabase-js";
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
+import { GachaImage } from "@/components/ui/GachaImage";
+import { useStoredValue } from "@/hooks/useStoredValue";
+import { distanceKm, productMetadata } from "@/lib/domain/sightings";
+import type { Coordinates, GachaLocation, Product } from "@/lib/domain/types";
+import { requireSupabaseBrowser } from "@/lib/supabase";
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!
-);
+const supabase = requireSupabaseBrowser();
 
-type Product = {
-  id: string;
-  name: string;
-  maker?: string | null;
-  genre?: string | null;
-  work_title?: string | null;
-  character_name?: string | null;
-  creator?: string | null;
-};
-
-type Location = {
-  id: string;
-  name: string;
-  latitude: number;
-  longitude: number;
-};
-
-type CurrentCoords = {
+type PostLocation = GachaLocation & {
   latitude: number;
   longitude: number;
 };
@@ -135,50 +119,22 @@ function drawThanksResult() {
   return thanksResults[0];
 }
 
-function calcDistanceKm(lat1: number, lon1: number, lat2: number, lon2: number) {
-  const R = 6371;
-  const dLat = ((lat2 - lat1) * Math.PI) / 180;
-  const dLon = ((lon2 - lon1) * Math.PI) / 180;
-  const a =
-    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-    Math.cos((lat1 * Math.PI) / 180) *
-      Math.cos((lat2 * Math.PI) / 180) *
-      Math.sin(dLon / 2) *
-      Math.sin(dLon / 2);
-
-  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-}
-
-function productMeta(product: Product) {
-  return [
-    product.work_title,
-    product.character_name,
-    product.genre,
-    product.creator,
-    product.maker,
-  ]
-    .filter(Boolean)
-    .join(" / ");
-}
-
 export default function PostPage() {
   const [products, setProducts] = useState<Product[]>([]);
-  const [locations, setLocations] = useState<Location[]>([]);
+  const [locations, setLocations] = useState<PostLocation[]>([]);
   const [productId, setProductId] = useState("");
   const [locationId, setLocationId] = useState("");
   const [status, setStatus] = useState("plenty");
   const [comment, setComment] = useState("");
   const [message, setMessage] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [currentCoords, setCurrentCoords] = useState<CurrentCoords | null>(null);
+  const [currentCoords, setCurrentCoords] = useState<Coordinates | null>(null);
   const [locationMessage, setLocationMessage] = useState("");
   const [thanksResult, setThanksResult] = useState<ThanksResult | null>(null);
-  const [thanksCount, setThanksCount] = useState(0);
+  const [thanksCount, setThanksCount] = useStoredValue<number>("gachadokoya_thanks_count", 0);
   const [shareMessage, setShareMessage] = useState("");
 
   useEffect(() => {
-    setThanksCount(Number(localStorage.getItem("gachadokoya_thanks_count") ?? "0"));
-
     async function loadOptions() {
       const [{ data: productData }, { data: locationData }] = await Promise.all([
         supabase.from("products").select("*").order("name"),
@@ -189,7 +145,7 @@ export default function PostPage() {
       ]);
 
       const nextProducts = (productData ?? []) as Product[];
-      const nextLocations = (locationData ?? []) as Location[];
+      const nextLocations = (locationData ?? []) as PostLocation[];
 
       setProducts(nextProducts);
       setLocations(nextLocations);
@@ -219,32 +175,17 @@ export default function PostPage() {
     if (!currentCoords) return locations;
 
     return [...locations].sort((a, b) => {
-      const distanceA = calcDistanceKm(
-        currentCoords.latitude,
-        currentCoords.longitude,
-        a.latitude,
-        a.longitude
-      );
-      const distanceB = calcDistanceKm(
-        currentCoords.latitude,
-        currentCoords.longitude,
-        b.latitude,
-        b.longitude
-      );
+      const distanceA = distanceKm(currentCoords, a);
+      const distanceB = distanceKm(currentCoords, b);
 
       return distanceA - distanceB;
     });
   }, [currentCoords, locations]);
 
-  function getDistanceLabel(location: Location) {
+  function getDistanceLabel(location: PostLocation) {
     if (!currentCoords) return "";
 
-    const km = calcDistanceKm(
-      currentCoords.latitude,
-      currentCoords.longitude,
-      location.latitude,
-      location.longitude
-    );
+    const km = distanceKm(currentCoords, location);
 
     return `（約${km.toFixed(1)}km）`;
   }
@@ -267,18 +208,8 @@ export default function PostPage() {
         setLocationMessage("📍 現在地に近い順で場所を並べました");
 
         const nearestLocation = [...locations].sort((a, b) => {
-          const distanceA = calcDistanceKm(
-            coords.latitude,
-            coords.longitude,
-            a.latitude,
-            a.longitude
-          );
-          const distanceB = calcDistanceKm(
-            coords.latitude,
-            coords.longitude,
-            b.latitude,
-            b.longitude
-          );
+          const distanceA = distanceKm(coords, a);
+          const distanceB = distanceKm(coords, b);
 
           return distanceA - distanceB;
         })[0];
@@ -392,9 +323,9 @@ onSubmit={(event) => {
                 </option>
               ))}
             </select>
-            {selectedProduct && productMeta(selectedProduct) && (
+            {selectedProduct && productMetadata(selectedProduct) && (
               <p className="mt-2 text-xs font-bold text-zinc-500">
-                {productMeta(selectedProduct)}
+                {productMetadata(selectedProduct)}
               </p>
             )}
           </div>
@@ -426,6 +357,9 @@ onSubmit={(event) => {
                 </option>
               ))}
             </select>
+            <Link href="/locations/new" className="mt-3 inline-block text-sm font-black text-pink-500 underline">
+              このお店が見つからない？ 未登録のお店を追加
+            </Link>
           </div>
 
           <div>
@@ -482,7 +416,7 @@ onSubmit={(event) => {
               <p className="text-xs font-black tracking-widest opacity-80">
                 {thanksResult.rarity}
               </p>
-              <img
+              <GachaImage
                 src="/subchan/thanks.png"
                 alt="お礼するサブちゃん"
                 className="mx-auto mt-3 h-44 w-44 object-contain drop-shadow-md"

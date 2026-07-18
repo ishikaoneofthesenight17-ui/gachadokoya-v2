@@ -1,43 +1,67 @@
-import type { Spot } from "./types";
+const synonymGroups = [
+  ["猫", "ねこ", "ネコ", "cat"],
+  ["犬", "いぬ", "イヌ", "dog"],
+  ["キーホルダー", "キーリング", "バッグチャーム", "チャーム"],
+  ["アクリルキーホルダー", "アクキー"],
+  ["アクリルスタンド", "アクスタ"],
+  ["ぬいぐるみ", "ぬい", "マスコット"],
+  ["フィギュア", "人形", "ミニフィギュア"],
+  ["ポーチ", "小物入れ", "ミニポーチ"],
+  ["缶バッジ", "カンバッジ", "バッジ"],
+  ["ストラップ", "根付", "ねつけ"],
+  ["シール", "ステッカー"],
+  ["エコバッグ", "トートバッグ", "バッグ"],
+] as const;
 
-const groups = [
-  ["猫", "ねこ", "ネコ", "cat", "キャット"],
-  ["犬", "いぬ", "イヌ", "dog", "ドッグ"],
-  ["ガチャ", "ガチャガチャ", "カプセルトイ", "カプセル", "capsule"],
-  ["サンリオ", "sanrio"],
-  ["ポケモン", "pokemon", "pokémon"],
-  ["ちいかわ", "チイカワ"],
-  ["ミニチュア", "miniature", "模型"],
-];
+function katakanaToHiragana(value: string) {
+  return value.replace(/[ァ-ヶ]/g, (character) =>
+    String.fromCharCode(character.charCodeAt(0) - 0x60)
+  );
+}
 
-export function normalizeText(value: string) {
-  return value
+export function normalizeSearchText(value: string) {
+  return katakanaToHiragana(value.normalize("NFKC").toLowerCase())
+    .replace(/[\s\u3000・･_\-ー—―/／,，.。:：;；()（）[\]【】「」『』]/g, "")
+    .trim();
+}
+
+const normalizedSynonymGroups = synonymGroups.map((group) =>
+  group.map((word) => normalizeSearchText(word))
+);
+
+function expandToken(token: string) {
+  const normalizedToken = normalizeSearchText(token);
+  const matchingGroup = normalizedSynonymGroups.find((group) =>
+    group.some(
+      (word) =>
+        word === normalizedToken ||
+        word.includes(normalizedToken) ||
+        normalizedToken.includes(word)
+    )
+  );
+
+  return matchingGroup ?? [normalizedToken];
+}
+
+/** Matches every query token while expanding common capsule-toy synonyms. */
+export function matchesFlexibleSearch(searchableValues: unknown[], query: string) {
+  const rawTokens = query
     .normalize("NFKC")
-    .toLowerCase()
-    .replace(/[\s　・･ー_\-\/]/g, "")
-    .replace(/[ぁ-ん]/g, (s) => String.fromCharCode(s.charCodeAt(0) + 0x60));
-}
+    .trim()
+    .split(/[\s\u3000]+/)
+    .filter(Boolean);
 
-function expandQuery(query: string) {
-  const normalized = normalizeText(query);
-  const words = new Set([normalized]);
-  for (const group of groups) {
-    if (group.some((x) => normalizeText(x) === normalized || normalized.includes(normalizeText(x)))) {
-      group.forEach((x) => words.add(normalizeText(x)));
-    }
-  }
-  return [...words];
-}
+  if (rawTokens.length === 0) return true;
 
-export function matchesSpot(spot: Spot, query: string) {
-  if (!query.trim()) return true;
-  const haystack = normalizeText([
-    spot.product_name,
-    spot.shop_name,
-    spot.address,
-    spot.maker,
-    spot.category,
-    spot.comment,
-  ].filter(Boolean).join(" "));
-  return expandQuery(query).some((q) => haystack.includes(q));
+  const searchableText = normalizeSearchText(
+    searchableValues
+      .filter((value): value is string | number =>
+        typeof value === "string" || typeof value === "number"
+      )
+      .join(" ")
+  );
+
+  return rawTokens.every((token) =>
+    expandToken(token).some((candidate) => searchableText.includes(candidate))
+  );
 }

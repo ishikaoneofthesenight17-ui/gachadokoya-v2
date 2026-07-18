@@ -1,77 +1,31 @@
 "use client";
 
-import { createClient } from "@supabase/supabase-js";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
+import { GachaImage } from "@/components/ui/GachaImage";
+import { toggleStoredId } from "@/lib/browser-storage";
+import { useStoredValue } from "@/hooks/useStoredValue";
+import { formatSightingDate, statusLabel, statusTone } from "@/lib/domain/sightings";
+import type { Product, Sighting } from "@/lib/domain/types";
+import { requireSupabaseBrowser } from "@/lib/supabase";
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!
-);
-
-type Product = {
-  id: string;
-  name: string;
-  maker?: string | null;
-  genre?: string | null;
-  work_title?: string | null;
-  character_name?: string | null;
-  creator?: string | null;
-  image_url?: string | null;
-};
-
-type Location = {
-  id?: string;
-  name?: string;
-  address?: string | null;
-};
-
-type Sighting = {
-  id: string;
-  status: string;
-  sighted_at: string;
-  comment?: string | null;
-  is_demo?: boolean | null;
-  photo_url?: string | null;
-  locations: Location | null;
-};
-
-function statusLabel(status: string) {
-  if (status === "plenty") return "残り多そう";
-  if (status === "available") return "まだあった";
-  if (status === "low") return "少なそう";
-  if (status === "sold_out") return "なかった";
-  return status;
-}
-
-function statusTone(status: string) {
-  if (status === "sold_out") return "bg-zinc-200 text-zinc-700";
-  if (status === "low") return "bg-orange-100 text-orange-700";
-  if (status === "plenty") return "bg-emerald-100 text-emerald-700";
-  return "bg-pink-100 text-pink-600";
-}
-
-function formatDate(value: string) {
-  return new Date(value).toLocaleString("ja-JP", {
-    month: "numeric",
-    day: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
-  });
-}
+const supabase = requireSupabaseBrowser();
 
 export default function ProductPage() {
   const params = useParams<{ id: string }>();
   const [product, setProduct] = useState<Product | null>(null);
   const [sightings, setSightings] = useState<Sighting[]>([]);
   const [loading, setLoading] = useState(true);
+  const [savedProducts] = useStoredValue<string[]>("gachadokoya_saved_products", []);
   const [saved, setSaved] = useState(false);
 
   useEffect(() => {
-    const savedProducts = JSON.parse(localStorage.getItem("gachadokoya_saved_products") || "[]") as string[];
-    setSaved(savedProducts.includes(params.id));
+    const frame = requestAnimationFrame(() => setSaved(savedProducts.includes(params.id)));
+    return () => cancelAnimationFrame(frame);
+  }, [params.id, savedProducts]);
 
+  useEffect(() => {
     async function load() {
       const [{ data: productData }, { data: sightingData }] = await Promise.all([
         supabase.from("products").select("*").eq("id", params.id).single(),
@@ -97,11 +51,7 @@ export default function ProductPage() {
   );
 
   function toggleSave() {
-    const current = JSON.parse(localStorage.getItem("gachadokoya_saved_products") || "[]") as string[];
-    const next = current.includes(params.id)
-      ? current.filter((id) => id !== params.id)
-      : [params.id, ...current];
-    localStorage.setItem("gachadokoya_saved_products", JSON.stringify(next));
+    const next = toggleStoredId("gachadokoya_saved_products", params.id);
     setSaved(next.includes(params.id));
   }
 
@@ -128,9 +78,9 @@ export default function ProductPage() {
         <article className="mt-4 overflow-hidden rounded-[2rem] bg-white shadow-xl md:grid md:grid-cols-2">
           <div className="flex aspect-square items-center justify-center bg-gradient-to-br from-yellow-100 to-pink-100 p-6">
             {product.image_url ? (
-              <img src={product.image_url} alt={product.name} className="h-full w-full object-contain" />
+              <GachaImage src={product.image_url} alt={product.name} className="h-full w-full object-contain" />
             ) : (
-              <img src="/subchan/thanks.png" alt="サブちゃん" className="h-52 w-52 object-contain" />
+              <GachaImage src="/subchan/thanks.png" alt="サブちゃん" className="h-52 w-52 object-contain" />
             )}
           </div>
           <div className="p-6 md:p-8">
@@ -144,7 +94,7 @@ export default function ProductPage() {
               <div className="rounded-3xl bg-zinc-50 p-4"><p className="text-xs font-bold text-zinc-500">今ありそう</p><p className="mt-1 text-2xl font-black">{activeCount}件</p></div>
             </div>
 
-            {latest && <div className="mt-4 rounded-3xl bg-yellow-50 p-4"><p className="text-xs font-bold text-zinc-500">最新の目撃</p><p className="mt-1 font-black">{latest.locations?.name || "店舗名未登録"}</p><p className="mt-1 text-sm font-bold text-zinc-500">{formatDate(latest.sighted_at)}</p></div>}
+            {latest && <div className="mt-4 rounded-3xl bg-yellow-50 p-4"><p className="text-xs font-bold text-zinc-500">最新の目撃</p><p className="mt-1 font-black">{latest.locations?.name || "店舗名未登録"}</p><p className="mt-1 text-sm font-bold text-zinc-500">{formatSightingDate(latest.sighted_at)}</p></div>}
             <Link href={`/post?product=${encodeURIComponent(product.id)}`} className="mt-5 block rounded-full bg-pink-500 px-5 py-4 text-center text-lg font-black text-white shadow">この商品を見つけた</Link>
           </div>
         </article>
@@ -156,7 +106,7 @@ export default function ProductPage() {
             {sightings.map((item) => (
               <Link key={item.id} href={`/sightings/${item.id}`} className="block rounded-3xl border border-zinc-200 p-4 hover:bg-yellow-50">
                 <div className="flex items-start justify-between gap-3"><div><p className="font-black">{item.locations?.name || "店舗名未登録"}</p>{item.locations?.address && <p className="mt-1 text-xs text-zinc-500">{item.locations.address}</p>}</div><span className={`shrink-0 rounded-full px-3 py-1 text-xs font-black ${statusTone(item.status)}`}>{statusLabel(item.status)}</span></div>
-                <p className="mt-2 text-xs font-bold text-zinc-500">{formatDate(item.sighted_at)}</p>
+                <p className="mt-2 text-xs font-bold text-zinc-500">{formatSightingDate(item.sighted_at)}</p>
                 {item.comment && !item.is_demo && <p className="mt-3 rounded-2xl bg-zinc-50 p-3 text-sm">{item.comment}</p>}
               </Link>
             ))}
