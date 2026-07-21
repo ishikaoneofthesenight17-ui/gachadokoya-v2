@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { GachaImage } from "@/components/ui/GachaImage";
 import { StoreMap } from "@/components/StoreMap";
 import { writeLocalStorage } from "@/lib/browser-storage";
@@ -40,12 +40,30 @@ const sortModes: { value: SortMode; label: string }[] = [
 ];
 
 const quickWords = ["猫", "ちいかわ", "サンリオ", "アクキー", "フィギュア"];
+const LOCATION_PAGE_SIZE = 1000;
 
 function sightingDistanceKm(currentCoords: Coordinates | null, item: Sighting) {
   const lat = item.locations?.latitude;
   const lng = item.locations?.longitude;
   if (!currentCoords || typeof lat !== "number" || typeof lng !== "number") return null;
   return distanceKm(currentCoords, { latitude: lat, longitude: lng });
+}
+
+async function loadAllLocations() {
+  const allLocations: GachaLocation[] = [];
+  for (let from = 0; ; from += LOCATION_PAGE_SIZE) {
+    const result = await supabase
+      .from("locations")
+      .select("*")
+      .order("prefecture", { nullsFirst: false })
+      .order("name")
+      .order("id")
+      .range(from, from + LOCATION_PAGE_SIZE - 1);
+    if (result.error) return { data: null, error: result.error };
+    const page = (result.data ?? []) as GachaLocation[];
+    allLocations.push(...page);
+    if (page.length < LOCATION_PAGE_SIZE) return { data: allLocations, error: null };
+  }
 }
 
 export default function Home() {
@@ -62,12 +80,13 @@ export default function Home() {
   const [favorites, setFavorites] = useStoredValue<string[]>("gachadokoya_favorites", []);
   const [helped, setHelped] = useStoredValue<string[]>("gachadokoya_helped", []);
   const [recentSearches, setRecentSearches] = useStoredValue<string[]>("gachadokoya_recent_searches", []);
+  const hasAutoRequestedLocation = useRef(false);
 
   useEffect(() => {
     async function loadData() {
       setIsLoading(true);
       const [locationResult, sightingResult] = await Promise.all([
-        supabase.from("locations").select("*").order("prefecture").order("name").range(0, 999),
+        loadAllLocations(),
         supabase.from("sightings").select("id,status,sighted_at,comment,is_demo,photo_url,products(*),locations(*)").order("sighted_at", { ascending: false }).limit(100),
       ]);
       if (locationResult.error || sightingResult.error) {
@@ -102,7 +121,7 @@ export default function Home() {
     writeLocalStorage("gachadokoya_helped", next);
   }
 
-  function handleGetLocation() {
+  const handleGetLocation = useCallback(() => {
     if (!navigator.geolocation) {
       setCurrentLocation("このブラウザでは位置情報が使えません");
       return;
@@ -116,7 +135,13 @@ export default function Home() {
       },
       () => setCurrentLocation("位置情報を取得できませんでした")
     );
-  }
+  }, []);
+
+  useEffect(() => {
+    if (viewMode !== "map" || currentCoords || hasAutoRequestedLocation.current) return;
+    hasAutoRequestedLocation.current = true;
+    handleGetLocation();
+  }, [currentCoords, handleGetLocation, viewMode]);
 
   const filteredSightings = useMemo(() => {
     return sightings
@@ -240,7 +265,7 @@ export default function Home() {
         {errorMessage && <div className="mt-5 rounded-3xl bg-white p-6 text-center font-bold text-red-500 shadow">{errorMessage}</div>}
         {isLoading && <div className="mt-5 rounded-3xl bg-white p-6 text-center font-bold shadow">読み込み中...</div>}
 
-        {!isLoading && viewMode === "map" && <div className="mt-5"><StoreMap locations={filteredLocations} /></div>}
+        {!isLoading && viewMode === "map" && <div className="mt-5"><StoreMap locations={filteredLocations} currentCoordinates={currentCoords} locationMessage={currentLocation} onBack={() => setViewMode("list")} onRetryLocation={handleGetLocation} /></div>}
 
         {!isLoading && filteredSightings.length === 0 && hasSearchQuery && <div className="mt-5 rounded-3xl bg-white p-7 text-center shadow"><p className="text-lg font-black">見つかりませんでした 🔍</p><p className="mt-2 text-sm text-zinc-600">短い言葉や別の表記でも探してみてください</p></div>}
 
