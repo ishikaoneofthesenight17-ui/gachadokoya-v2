@@ -1,8 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useRef } from "react";
-import type { Map as LeafletMap } from "leaflet";
+import { useEffect, useRef, useState } from "react";
+import type { LayerGroup, Map as LeafletMap } from "leaflet";
 import type { GachaLocation } from "@/lib/domain/types";
 import type { Coordinates } from "@/lib/domain/types";
 
@@ -17,43 +17,98 @@ type Props = {
 export function StoreMap({ locations, currentCoordinates, locationMessage, onBack, onRetryLocation }: Props) {
   const containerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<LeafletMap | null>(null);
+  const storeMarkersRef = useRef<LayerGroup | null>(null);
+  const currentLocationMarkerRef = useRef<LayerGroup | null>(null);
+  const leafletRef = useRef<typeof import("leaflet") | null>(null);
+  const initializationGenerationRef = useRef(0);
+  const [mapGeneration, setMapGeneration] = useState(0);
 
   useEffect(() => {
-    let cancelled = false;
-    async function renderMap() {
-      if (!containerRef.current) return;
+    const generation = initializationGenerationRef.current + 1;
+    initializationGenerationRef.current = generation;
+    let disposed = false;
+
+    async function initializeMap() {
       const L = await import("leaflet");
-      if (cancelled || !containerRef.current) return;
-      mapRef.current?.remove();
-      const map = L.map(containerRef.current, { preferCanvas: true }).setView([36.2, 138.2], 5);
+      const container = containerRef.current;
+      if (disposed || generation !== initializationGenerationRef.current || !container || mapRef.current) return;
+
+      // HMR can leave Leaflet's private container id behind after the old
+      // module instance is discarded. Only clear it when no live map exists.
+      const leafletContainer = container as HTMLDivElement & { _leaflet_id?: number };
+      if (leafletContainer._leaflet_id) {
+        container.replaceChildren();
+        delete leafletContainer._leaflet_id;
+      }
+
+      const map = L.map(container, { preferCanvas: true, zoomAnimation: false }).setView([36.2, 138.2], 5);
+      if (disposed || generation !== initializationGenerationRef.current) {
+        safelyRemoveMap(map);
+        return;
+      }
+
+      leafletRef.current = L;
       mapRef.current = map;
       L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
         attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
         maxZoom: 19,
       }).addTo(map);
-      const bounds: [number, number][] = [];
-      for (const location of locations) {
-        if (typeof location.latitude !== "number" || typeof location.longitude !== "number") continue;
-        const point: [number, number] = [location.latitude, location.longitude];
-        bounds.push(point);
-        const popup = document.createElement("div");
-        popup.innerHTML = `<strong>${escapeHtml(location.name)}</strong><br><span>${escapeHtml(location.address ?? "")}</span><br><a href="/locations/${encodeURIComponent(location.id)}">店舗詳細を見る</a>`;
-        L.circleMarker(point, { radius: 6, color: "#be185d", weight: 2, fillColor: "#ec4899", fillOpacity: 0.8 })
-          .bindPopup(popup)
-          .addTo(map);
-      }
-      if (currentCoordinates) {
-        const currentPoint: [number, number] = [currentCoordinates.latitude, currentCoordinates.longitude];
-        bounds.push(currentPoint);
-        L.circleMarker(currentPoint, { radius: 10, color: "#ffffff", weight: 3, fillColor: "#2563eb", fillOpacity: 1 })
-          .bindPopup("現在地")
-          .addTo(map);
-      }
-      if (bounds.length > 1) map.fitBounds(bounds, { padding: [20, 20] });
+      storeMarkersRef.current = L.layerGroup().addTo(map);
+      currentLocationMarkerRef.current = L.layerGroup().addTo(map);
+      setMapGeneration(generation);
     }
-    renderMap();
-    return () => { cancelled = true; mapRef.current?.remove(); mapRef.current = null; };
-  }, [currentCoordinates, locations]);
+
+    initializeMap();
+    return () => {
+      disposed = true;
+      initializationGenerationRef.current += 1;
+      const map = mapRef.current;
+      mapRef.current = null;
+      storeMarkersRef.current = null;
+      currentLocationMarkerRef.current = null;
+      leafletRef.current = null;
+      if (map) safelyRemoveMap(map);
+    };
+  }, []);
+
+  useEffect(() => {
+    const L = leafletRef.current;
+    const layer = storeMarkersRef.current;
+    if (!mapGeneration || !L || !layer) return;
+    layer.clearLayers();
+    for (const location of locations) {
+      if (typeof location.latitude !== "number" || typeof location.longitude !== "number") continue;
+      const popup = document.createElement("div");
+      popup.innerHTML = `<strong>${escapeHtml(location.name)}</strong><br><span>${escapeHtml(location.address ?? "")}</span><br><a href="/locations/${encodeURIComponent(location.id)}">店舗詳細を見る</a>`;
+      L.circleMarker([location.latitude, location.longitude], { radius: 6, color: "#be185d", weight: 2, fillColor: "#ec4899", fillOpacity: 0.8 })
+        .bindPopup(popup)
+        .addTo(layer);
+    }
+  }, [locations, mapGeneration]);
+
+  useEffect(() => {
+    const L = leafletRef.current;
+    const layer = currentLocationMarkerRef.current;
+    if (!mapGeneration || !L || !layer) return;
+    layer.clearLayers();
+    if (currentCoordinates) {
+      L.circleMarker([currentCoordinates.latitude, currentCoordinates.longitude], { radius: 10, color: "#ffffff", weight: 3, fillColor: "#2563eb", fillOpacity: 1 })
+        .bindPopup("現在地")
+        .addTo(layer);
+    }
+  }, [currentCoordinates, mapGeneration]);
+
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!mapGeneration || !map) return;
+    const bounds: [number, number][] = locations.flatMap((location) =>
+      typeof location.latitude === "number" && typeof location.longitude === "number"
+        ? [[location.latitude, location.longitude] as [number, number]]
+        : []
+    );
+    if (currentCoordinates) bounds.push([currentCoordinates.latitude, currentCoordinates.longitude]);
+    if (bounds.length > 0) map.fitBounds(bounds, { padding: [20, 20], animate: false });
+  }, [currentCoordinates, locations, mapGeneration]);
 
   const locationFailed = !currentCoordinates && locationMessage && locationMessage !== "現在地を取得中...";
 
@@ -71,6 +126,17 @@ export function StoreMap({ locations, currentCoordinates, locationMessage, onBac
       {locationMessage && <p className="px-4 pb-4 text-xs font-bold text-zinc-500">{locationMessage}</p>}
     </div>
   );
+}
+
+function safelyRemoveMap(map: LeafletMap) {
+  try {
+    map.stop();
+    map.remove();
+  } catch (error) {
+    // Strict Mode and HMR may already have detached the container. Cleanup is
+    // intentionally idempotent so an obsolete instance cannot break the next.
+    console.debug("Leaflet map was already detached", error);
+  }
 }
 
 function escapeHtml(value: string) {
