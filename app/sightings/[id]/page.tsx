@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import { GachaImage } from "@/components/ui/GachaImage";
+import { VerificationBadge } from "@/components/VerificationBadge";
 import { readLocalStorage, toggleStoredId, writeLocalStorage } from "@/lib/browser-storage";
 import { useStoredValue } from "@/hooks/useStoredValue";
 import { googleMapsUrls, productMetadata, statusLabel, statusTone } from "@/lib/domain/sightings";
@@ -108,7 +109,7 @@ export default function SightingDetailPage() {
         </div>
 
         <div className="mt-5 overflow-hidden rounded-[2rem] bg-white shadow-xl">
-          <div className="p-6"><p className="text-xs font-black text-pink-500">SPOT</p><h2 className="mt-1 text-2xl font-black">{item.locations?.id ? <Link href={`/locations/${item.locations.id}`} className="underline decoration-yellow-300 decoration-4 underline-offset-4">{item.locations?.name || "店舗名未登録"}</Link> : item.locations?.name || "店舗名未登録"}</h2>{item.locations?.address && <p className="mt-3 text-sm text-zinc-600">{item.locations.address}</p>}{item.locations?.nearest_station && <p className="mt-1 text-sm font-bold text-zinc-600">最寄り：{item.locations.nearest_station}</p>}</div>
+          <div className="p-6"><p className="text-xs font-black text-pink-500">SPOT</p><h2 className="mt-1 text-2xl font-black">{item.locations?.id ? <Link href={`/locations/${item.locations.id}`} className="underline decoration-yellow-300 decoration-4 underline-offset-4">{item.locations?.name || "店舗名未登録"}</Link> : item.locations?.name || "店舗名未登録"}</h2>{item.locations && <div className="mt-3"><VerificationBadge status={item.locations.verification_status} /></div>}{item.locations?.address && <p className="mt-3 text-sm text-zinc-600">{item.locations.address}</p>}{item.locations?.nearest_station && <p className="mt-1 text-sm font-bold text-zinc-600">最寄り：{item.locations.nearest_station}</p>}{item.locations?.verification_status !== "confirmed" && <p className="mt-3 rounded-2xl bg-amber-50 p-3 text-xs font-bold text-amber-800">店舗マスタ上は設置候補です。表示中の投稿日時と在庫状態をご確認ください。</p>}</div>
           {maps && <><iframe title="店舗地図" src={maps.embed} className="h-72 w-full border-0" loading="lazy" referrerPolicy="no-referrer-when-downgrade"/><div className="grid gap-3 p-4 sm:grid-cols-2"><a href={maps.open} target="_blank" rel="noreferrer" className="rounded-full bg-zinc-900 px-5 py-4 text-center font-black text-white">Googleマップで開く</a><Link href={postHref} className="rounded-full bg-yellow-300 px-5 py-4 text-center font-black">この場所の今を報告</Link></div></>}
         </div>
 

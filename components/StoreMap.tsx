@@ -80,7 +80,9 @@ export function StoreMap({ locations, currentCoordinates, locationMessage, onBac
       if (typeof location.latitude !== "number" || typeof location.longitude !== "number") continue;
       const popup = document.createElement("div");
       popup.innerHTML = `<strong>${escapeHtml(location.name)}</strong><br><span>${escapeHtml(location.address ?? "")}</span><br><a href="/locations/${encodeURIComponent(location.id)}">店舗詳細を見る</a>`;
-      L.circleMarker([location.latitude, location.longitude], { radius: 6, color: "#be185d", weight: 2, fillColor: "#ec4899", fillOpacity: 0.8 })
+      const confirmed = location.verification_status === "confirmed";
+      popup.insertAdjacentHTML("beforeend", `<br><strong>${confirmed ? "確認済み" : "設置候補（取扱未確認）"}</strong>`);
+      L.circleMarker([location.latitude, location.longitude], { radius: 6, color: confirmed ? "#047857" : "#b45309", weight: 2, fillColor: confirmed ? "#10b981" : "#f59e0b", fillOpacity: 0.8 })
         .bindPopup(popup)
         .addTo(layer);
     }

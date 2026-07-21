@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import { GachaImage } from "@/components/ui/GachaImage";
+import { VerificationBadge } from "@/components/VerificationBadge";
 import { toggleStoredId } from "@/lib/browser-storage";
 import { useStoredValue } from "@/hooks/useStoredValue";
 import { googleMapsUrls, statusLabel, statusTone } from "@/lib/domain/sightings";
@@ -132,7 +133,8 @@ export default function LocationPage() {
           <div className="p-6 md:p-8">
             <p className="text-xs font-black tracking-widest text-pink-500">GACHA SPOT</p>
             <h1 className="mt-2 text-3xl font-black leading-tight">{locationData.name}</h1>
-            <div className="mt-3 flex flex-wrap gap-2">{locationData.chain_name && <span className="rounded-full bg-pink-50 px-3 py-1 text-xs font-black text-pink-600">{locationData.chain_name}</span>}{locationData.prefecture && <span className="rounded-full bg-zinc-100 px-3 py-1 text-xs font-bold">{locationData.prefecture}</span>}{locationData.category && <span className="rounded-full bg-yellow-100 px-3 py-1 text-xs font-bold">{locationData.category}</span>}</div>
+            <div className="mt-3 flex flex-wrap gap-2"><VerificationBadge status={locationData.verification_status} />{locationData.chain_name && <span className="rounded-full bg-pink-50 px-3 py-1 text-xs font-black text-pink-600">{locationData.chain_name}</span>}{locationData.prefecture && <span className="rounded-full bg-zinc-100 px-3 py-1 text-xs font-bold">{locationData.prefecture}</span>}{locationData.category && <span className="rounded-full bg-yellow-100 px-3 py-1 text-xs font-bold">{locationData.category}</span>}</div>
+            {locationData.verification_status !== "confirmed" && <p className="mt-3 rounded-2xl bg-amber-50 p-3 text-xs font-bold leading-5 text-amber-800">この店舗は設置候補です。ガチャの設置・在庫・取扱を確認済みという意味ではありません。最新の目撃投稿または現地情報をご確認ください。</p>}
             {locationData.address && <p className="mt-4 text-sm font-bold text-zinc-600">📍 {locationData.address}</p>}
             {locationData.nearest_station && <p className="mt-1 text-sm font-bold text-zinc-600">🚉 {locationData.nearest_station}</p>}
             {locationData.official_url && <a href={locationData.official_url} target="_blank" rel="noreferrer" className="mt-3 inline-block text-sm font-black text-pink-600 underline">公式店舗ページ ↗</a>}

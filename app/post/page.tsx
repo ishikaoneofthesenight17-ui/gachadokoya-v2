@@ -7,6 +7,7 @@ import { useStoredValue } from "@/hooks/useStoredValue";
 import { distanceKm, productMetadata } from "@/lib/domain/sightings";
 import type { Coordinates, GachaLocation, Product } from "@/lib/domain/types";
 import { requireSupabaseBrowser } from "@/lib/supabase";
+import { fetchAllLocations, fetchAllProducts } from "@/lib/catalog";
 
 const supabase = requireSupabaseBrowser();
 
@@ -136,16 +137,15 @@ export default function PostPage() {
 
   useEffect(() => {
     async function loadOptions() {
-      const [{ data: productData }, { data: locationData }] = await Promise.all([
-        supabase.from("products").select("*").order("name"),
-        supabase
-          .from("locations")
-          .select("id, name, latitude, longitude")
-          .order("name"),
+      const [productResult, locationResult] = await Promise.all([
+        fetchAllProducts(supabase),
+        fetchAllLocations(supabase),
       ]);
 
-      const nextProducts = (productData ?? []) as Product[];
-      const nextLocations = (locationData ?? []) as PostLocation[];
+      const nextProducts = (productResult.data ?? []) as Product[];
+      const nextLocations = (locationResult.data ?? []).filter((location): location is PostLocation =>
+        typeof location.latitude === "number" && typeof location.longitude === "number"
+      );
 
       setProducts(nextProducts);
       setLocations(nextLocations);
@@ -353,7 +353,7 @@ onSubmit={(event) => {
             >
               {sortedLocations.map((location) => (
                 <option key={location.id} value={location.id}>
-                  {location.name} {getDistanceLabel(location)}
+                  {location.name} {location.verification_status === "confirmed" ? "[確認済み]" : "[設置候補]"} {getDistanceLabel(location)}
                 </option>
               ))}
             </select>

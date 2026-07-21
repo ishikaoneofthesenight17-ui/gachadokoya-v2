@@ -8,7 +8,17 @@ export type Product = {
   character_name?: string | null;
   creator?: string | null;
   image_url?: string | null;
+  series?: string | null;
+  series_name?: string | null;
+  character?: string | null;
+  category?: string | null;
+  price?: number | null;
+  release_month?: string | null;
+  release_period?: string | null;
+  official_url?: string | null;
 };
+
+export type VerificationStatus = "confirmed" | "candidate";
 
 /** Location master data shared by search, posting, and detail screens. */
 export type GachaLocation = {
@@ -26,6 +36,7 @@ export type GachaLocation = {
   source_type?: "official" | "user" | null;
   source_checked_at?: string | null;
   user_note?: string | null;
+  verification_status?: VerificationStatus | null;
   created_at?: string;
   updated_at?: string;
 };

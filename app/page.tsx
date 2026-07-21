@@ -4,6 +4,9 @@ import Link from "next/link";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { GachaImage } from "@/components/ui/GachaImage";
 import { StoreMap } from "@/components/StoreMap";
+import { ProductCard } from "@/components/ProductCard";
+import { VerificationBadge } from "@/components/VerificationBadge";
+import { SightingLocationCard } from "@/components/SightingLocationCard";
 import { writeLocalStorage } from "@/lib/browser-storage";
 import { useStoredValue } from "@/hooks/useStoredValue";
 import {
@@ -17,9 +20,10 @@ import {
   statusLabel,
   statusTone,
 } from "@/lib/domain/sightings";
-import type { Coordinates, GachaLocation, Sighting } from "@/lib/domain/types";
+import type { Coordinates, GachaLocation, Product, Sighting } from "@/lib/domain/types";
 import { requireSupabaseBrowser } from "@/lib/supabase";
 import { matchesFlexibleSearch } from "@/lib/search";
+import { fetchAllLocations, fetchAllProducts, fetchAllSightings } from "@/lib/catalog";
 
 const supabase = requireSupabaseBrowser();
 type StatusFilter = "all" | "available" | "low" | "sold_out";
@@ -40,7 +44,6 @@ const sortModes: { value: SortMode; label: string }[] = [
 ];
 
 const quickWords = ["猫", "ちいかわ", "サンリオ", "アクキー", "フィギュア"];
-const LOCATION_PAGE_SIZE = 1000;
 
 function sightingDistanceKm(currentCoords: Coordinates | null, item: Sighting) {
   const lat = item.locations?.latitude;
@@ -49,27 +52,13 @@ function sightingDistanceKm(currentCoords: Coordinates | null, item: Sighting) {
   return distanceKm(currentCoords, { latitude: lat, longitude: lng });
 }
 
-async function loadAllLocations() {
-  const allLocations: GachaLocation[] = [];
-  for (let from = 0; ; from += LOCATION_PAGE_SIZE) {
-    const result = await supabase
-      .from("locations")
-      .select("*")
-      .order("prefecture", { nullsFirst: false })
-      .order("name")
-      .order("id")
-      .range(from, from + LOCATION_PAGE_SIZE - 1);
-    if (result.error) return { data: null, error: result.error };
-    const page = (result.data ?? []) as GachaLocation[];
-    allLocations.push(...page);
-    if (page.length < LOCATION_PAGE_SIZE) return { data: allLocations, error: null };
-  }
-}
-
 export default function Home() {
   const [sightings, setSightings] = useState<Sighting[]>([]);
   const [locations, setLocations] = useState<GachaLocation[]>([]);
+  const [products, setProducts] = useState<Product[]>([]);
+  const [searchInput, setSearchInput] = useState("");
   const [keyword, setKeyword] = useState("");
+  const [searchExecutionId, setSearchExecutionId] = useState(0);
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
   const [sortMode, setSortMode] = useState<SortMode>("likelihood");
   const [viewMode, setViewMode] = useState<ViewMode>("list");
@@ -81,19 +70,23 @@ export default function Home() {
   const [helped, setHelped] = useStoredValue<string[]>("gachadokoya_helped", []);
   const [recentSearches, setRecentSearches] = useStoredValue<string[]>("gachadokoya_recent_searches", []);
   const hasAutoRequestedLocation = useRef(false);
+  const searchInputRef = useRef<HTMLInputElement>(null);
+  const searchResultsRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     async function loadData() {
       setIsLoading(true);
-      const [locationResult, sightingResult] = await Promise.all([
-        loadAllLocations(),
-        supabase.from("sightings").select("id,status,sighted_at,comment,is_demo,photo_url,products(*),locations(*)").order("sighted_at", { ascending: false }).limit(100),
+      const [locationResult, productResult, sightingResult] = await Promise.all([
+        fetchAllLocations(supabase),
+        fetchAllProducts(supabase),
+        fetchAllSightings(supabase),
       ]);
-      if (locationResult.error || sightingResult.error) {
-        console.error(locationResult.error || sightingResult.error);
-        setErrorMessage("店舗または投稿を読み込めませんでした");
+      if (locationResult.error || productResult.error || sightingResult.error) {
+        console.error(locationResult.error || productResult.error || sightingResult.error);
+        setErrorMessage("商品、店舗、または投稿を読み込めませんでした");
       } else {
         setLocations((locationResult.data ?? []) as GachaLocation[]);
+        setProducts((productResult.data ?? []) as Product[]);
         setSightings((sightingResult.data ?? []) as Sighting[]);
       }
       setIsLoading(false);
@@ -107,6 +100,16 @@ export default function Home() {
     const next = [clean, ...recentSearches.filter((item) => item !== clean)].slice(0, 5);
     setRecentSearches(next);
     writeLocalStorage("gachadokoya_recent_searches", next);
+  }
+
+  function executeSearch(value: string) {
+    const clean = value.trim();
+    setSearchInput(clean);
+    setKeyword(clean);
+    setViewMode("list");
+    rememberSearch(clean);
+    searchInputRef.current?.blur();
+    setSearchExecutionId((current) => current + 1);
   }
 
   function toggleFavorite(id: string) {
@@ -142,6 +145,14 @@ export default function Home() {
     hasAutoRequestedLocation.current = true;
     handleGetLocation();
   }, [currentCoords, handleGetLocation, viewMode]);
+
+  useEffect(() => {
+    if (searchExecutionId === 0 || isLoading) return;
+    const frame = requestAnimationFrame(() => {
+      searchResultsRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+    });
+    return () => cancelAnimationFrame(frame);
+  }, [isLoading, searchExecutionId]);
 
   const filteredSightings = useMemo(() => {
     return sightings
@@ -186,6 +197,41 @@ export default function Home() {
       return (a.prefecture ?? "").localeCompare(b.prefecture ?? "", "ja") || a.name.localeCompare(b.name, "ja");
     }), [currentCoords, keyword, locations, sortMode]);
 
+  const filteredProducts = useMemo(() => keyword.trim() ? products.filter((product) => matchesFlexibleSearch([
+    product.name,
+    product.work_title,
+    product.character_name,
+    product.character,
+    product.genre,
+    product.category,
+    product.creator,
+    product.maker,
+    product.series,
+    product.series_name,
+  ], keyword)) : [], [keyword, products]);
+
+  const productSightingLocations = useMemo(() => {
+    const productIds = new Set(filteredProducts.map((product) => product.id));
+    const latestByLocation = new Map<string, { location: GachaLocation; latest: Sighting }>();
+    for (const sighting of sightings) {
+      const productId = sighting.product_id || sighting.products?.id;
+      const location = sighting.locations;
+      if (!productId || !productIds.has(productId) || !location?.id) continue;
+      const current = latestByLocation.get(location.id);
+      if (!current || new Date(sighting.sighted_at).getTime() > new Date(current.latest.sighted_at).getTime()) {
+        latestByLocation.set(location.id, { location, latest: sighting });
+      }
+    }
+    return Array.from(latestByLocation.values()).sort((a, b) =>
+      new Date(b.latest.sighted_at).getTime() - new Date(a.latest.sighted_at).getTime()
+    );
+  }, [filteredProducts, sightings]);
+
+  const mapLocations = useMemo(() => Array.from(new Map([
+    ...filteredLocations,
+    ...productSightingLocations.map((item) => item.location),
+  ].map((location) => [location.id, location])).values()), [filteredLocations, productSightingLocations]);
+
   const topSighting = filteredSightings[0];
   const hasSearchQuery = keyword.trim().length > 0 || viewMode === "favorites";
   const freshCount = sightings.filter((item) => elapsedHours(item.sighted_at) <= 24).length;
@@ -207,13 +253,14 @@ export default function Home() {
         </div>
 
         <div className="mt-4 rounded-[2rem] bg-yellow-300 p-4 shadow-lg">
-          <form onSubmit={(e) => { e.preventDefault(); rememberSearch(keyword); }}>
+          <form onSubmit={(e) => { e.preventDefault(); executeSearch(searchInput); }}>
             <div className="flex gap-2">
               <input
+                ref={searchInputRef}
                 className="min-w-0 flex-1 rounded-full bg-white px-5 py-4 text-base font-bold shadow-sm outline-none focus:ring-4 focus:ring-pink-200"
                 placeholder="商品・キャラ・メーカー・店舗"
-                value={keyword}
-                onChange={(e) => setKeyword(e.target.value)}
+                value={searchInput}
+                onChange={(e) => setSearchInput(e.target.value)}
               />
               <button className="rounded-full bg-zinc-900 px-5 font-black text-white" type="submit">検索</button>
             </div>
@@ -221,7 +268,7 @@ export default function Home() {
 
           <div className="mt-3 flex flex-wrap gap-2">
             {quickWords.map((word) => (
-              <button key={word} onClick={() => { setKeyword(word); rememberSearch(word); }} className="rounded-full bg-white/80 px-3 py-1.5 text-xs font-black">{word}</button>
+              <button type="button" key={word} onClick={() => executeSearch(word)} className="rounded-full bg-white/80 px-3 py-1.5 text-xs font-black">{word}</button>
             ))}
           </div>
 
@@ -232,7 +279,7 @@ export default function Home() {
         {!hasSearchQuery && recentSearches.length > 0 && (
           <div className="mt-4 rounded-3xl bg-white p-4 shadow-sm">
             <div className="flex items-center justify-between"><p className="text-sm font-black">最近の検索</p><button onClick={() => { setRecentSearches([]); localStorage.removeItem("gachadokoya_recent_searches"); }} className="text-xs font-bold text-zinc-400">消去</button></div>
-            <div className="mt-3 flex flex-wrap gap-2">{recentSearches.map((word) => <button key={word} onClick={() => setKeyword(word)} className="rounded-full bg-zinc-100 px-3 py-2 text-sm font-bold">↻ {word}</button>)}</div>
+            <div className="mt-3 flex flex-wrap gap-2">{recentSearches.map((word) => <button type="button" key={word} onClick={() => executeSearch(word)} className="rounded-full bg-zinc-100 px-3 py-2 text-sm font-bold">↻ {word}</button>)}</div>
           </div>
         )}
 
@@ -246,8 +293,8 @@ export default function Home() {
         </div>
 
         {hasSearchQuery && (
-          <div className="mt-4 rounded-3xl bg-white p-4 shadow-sm">
-            <div className="flex items-center justify-between"><p className="font-black">{viewMode === 'favorites' ? '保存した情報' : `「${keyword}」の店舗`}</p><p className="text-sm font-black text-pink-500">{filteredLocations.length}件</p></div>
+          <div ref={searchResultsRef} role="status" aria-live="polite" aria-atomic="true" className="mt-4 scroll-mt-24 rounded-3xl bg-white p-4 shadow-sm">
+            <div className="flex items-start justify-between gap-3"><h2 className="text-xl font-black">{viewMode === 'favorites' ? '保存した情報' : `「${keyword}」の検索結果`}</h2><p className="shrink-0 text-right text-xs font-black leading-5 text-pink-500">商品 {filteredProducts.length}件<br/>目撃店舗 {productSightingLocations.length}件<br/>関連投稿 {filteredSightings.length}件</p></div>
             <div className="mt-3 grid grid-cols-4 gap-1.5">{statusFilters.map((filter) => <button key={filter.value} onClick={() => setStatusFilter(filter.value)} className={`rounded-full px-2 py-2 text-xs font-black ${statusFilter === filter.value ? 'bg-zinc-900 text-white' : 'bg-zinc-100'}`}>{filter.label}</button>)}</div>
             <div className="mt-3 grid grid-cols-3 gap-1.5">{sortModes.map((mode) => <button key={mode.value} onClick={() => setSortMode(mode.value)} className={`rounded-full px-2 py-2 text-xs font-black ${sortMode === mode.value ? 'bg-pink-500 text-white' : 'bg-zinc-100'}`}>{mode.label}</button>)}</div>
           </div>
@@ -265,20 +312,32 @@ export default function Home() {
         {errorMessage && <div className="mt-5 rounded-3xl bg-white p-6 text-center font-bold text-red-500 shadow">{errorMessage}</div>}
         {isLoading && <div className="mt-5 rounded-3xl bg-white p-6 text-center font-bold shadow">読み込み中...</div>}
 
-        {!isLoading && viewMode === "map" && <div className="mt-5"><StoreMap locations={filteredLocations} currentCoordinates={currentCoords} locationMessage={currentLocation} onBack={() => setViewMode("list")} onRetryLocation={handleGetLocation} /></div>}
+        {!isLoading && viewMode === "map" && <div className="mt-5"><StoreMap locations={mapLocations} currentCoordinates={currentCoords} locationMessage={currentLocation} onBack={() => setViewMode("list")} onRetryLocation={handleGetLocation} /></div>}
 
-        {!isLoading && filteredSightings.length === 0 && hasSearchQuery && <div className="mt-5 rounded-3xl bg-white p-7 text-center shadow"><p className="text-lg font-black">見つかりませんでした 🔍</p><p className="mt-2 text-sm text-zinc-600">短い言葉や別の表記でも探してみてください</p></div>}
+        {!isLoading && filteredProducts.length === 0 && filteredLocations.length === 0 && filteredSightings.length === 0 && hasSearchQuery && <div className="mt-5 rounded-3xl bg-white p-7 text-center shadow"><p className="text-lg font-black">見つかりませんでした 🔍</p><p className="mt-2 text-sm text-zinc-600">短い言葉や別の表記でも探してみてください</p></div>}
+
+        {!isLoading && viewMode !== "map" && hasSearchQuery && filteredProducts.length > 0 && (
+          <section className="mt-5"><div className="flex items-end justify-between"><div><p className="text-xs font-black text-pink-500">PRODUCTS</p><h2 className="text-2xl font-black">商品</h2></div><span className="text-sm font-black text-zinc-500">{filteredProducts.length}件</span></div><div className="mt-3 space-y-3">{filteredProducts.slice(0, 100).map((product) => <ProductCard key={product.id} product={product} />)}</div>{filteredProducts.length > 100 && <p className="mt-3 text-center text-sm font-bold text-zinc-500">最初の100件を表示しています。検索語を追加して絞り込んでください。</p>}</section>
+        )}
+
+        {!isLoading && viewMode !== "map" && keyword.trim() && filteredProducts.length > 0 && (
+          <section className="mt-7">
+            <div className="flex items-end justify-between gap-3"><div><p className="text-xs font-black text-pink-500">ACTUAL SIGHTINGS</p><h2 className="text-2xl font-black">この商品の目撃店舗</h2></div><span className="text-sm font-black text-zinc-500">{productSightingLocations.length}件</span></div>
+            {productSightingLocations.length > 0 ? <div className="mt-3 space-y-3">{productSightingLocations.map(({ location, latest }) => <SightingLocationCard key={location.id} location={location} latest={latest} />)}</div> : <p className="mt-3 rounded-3xl bg-white p-5 text-center text-sm font-bold text-zinc-500 shadow">この条件の商品が目撃された店舗はまだありません</p>}
+          </section>
+        )}
 
         {!isLoading && viewMode !== "map" && hasSearchQuery && filteredLocations.length > 0 && (
-          <div className="mt-5 space-y-3">
+          <section className="mt-7"><div className="flex items-end justify-between"><div><p className="text-xs font-black text-pink-500">LOCATION MATCHES</p><h2 className="text-2xl font-black">店舗名・場所の検索結果</h2></div><span className="text-sm font-black text-zinc-500">{filteredLocations.length}件</span></div><div className="mt-3 space-y-3">
             {filteredLocations.slice(0, 100).map((location) => (
               <Link key={location.id} href={`/locations/${location.id}`} className="block rounded-3xl bg-white p-5 shadow">
-                <div className="flex items-start justify-between gap-3"><div><p className="font-black">{location.name}</p><p className="mt-1 text-xs font-bold text-pink-500">{location.chain_name || location.category}</p></div><span className="shrink-0 text-sm font-black">詳細 →</span></div>
+                <div className="flex items-start justify-between gap-3"><div><p className="font-black">{location.name}</p><p className="mt-1 text-xs font-bold text-pink-500">{location.chain_name || location.category}</p></div><VerificationBadge status={location.verification_status} /></div>
                 <p className="mt-3 text-sm text-zinc-600">{location.address}</p>
+                {location.verification_status !== "confirmed" && <p className="mt-2 text-xs font-bold text-amber-700">設置・取扱は未確認です。現地情報をご確認ください。</p>}
               </Link>
             ))}
             {filteredLocations.length > 100 && <p className="text-center text-sm font-bold text-zinc-500">最初の100件を表示しています。都道府県や店舗名で絞り込んでください。</p>}
-          </div>
+          </div></section>
         )}
 
         {!isLoading && viewMode !== "map" && hasSearchQuery && filteredSightings.length > 0 && (
