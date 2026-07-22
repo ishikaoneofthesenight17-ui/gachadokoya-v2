@@ -3,3 +3,5 @@ node_modules
 .env.local
 .DS_Store
 *.tsbuildinfo
+data/product-backfill/html/*
+!data/product-backfill/html/README.md

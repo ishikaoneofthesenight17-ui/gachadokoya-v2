@@ -1,0 +1,55 @@
+{
+  "generated_at": "2026-07-22T13:39:39.196Z",
+  "existing_expected": 729,
+  "existing_actual": 729,
+  "target_total": 3000,
+  "required_candidates": 2271,
+  "selected_candidates": 2271,
+  "projected_total": 3000,
+  "manufacturers": [
+    {
+      "maker": "バンダイ",
+      "fetched": 8908,
+      "eligible": 7694,
+      "adopted": 1072,
+      "existing_duplicates": 573,
+      "candidate_duplicates": 597,
+      "unnatural_excluded": 44,
+      "errors": 0,
+      "error_details": []
+    },
+    {
+      "maker": "タカラトミーアーツ",
+      "fetched": 2554,
+      "eligible": 2534,
+      "adopted": 1072,
+      "existing_duplicates": 0,
+      "candidate_duplicates": 18,
+      "unnatural_excluded": 2,
+      "errors": 0,
+      "error_details": []
+    },
+    {
+      "maker": "キタンクラブ",
+      "fetched": 7,
+      "eligible": 7,
+      "adopted": 7,
+      "existing_duplicates": 0,
+      "candidate_duplicates": 0,
+      "unnatural_excluded": 0,
+      "errors": 0,
+      "error_details": []
+    },
+    {
+      "maker": "Qualia",
+      "fetched": 120,
+      "eligible": 120,
+      "adopted": 120,
+      "existing_duplicates": 0,
+      "candidate_duplicates": 0,
+      "unnatural_excluded": 0,
+      "errors": 0,
+      "error_details": []
+    }
+  ]
+}

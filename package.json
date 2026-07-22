@@ -11,7 +11,10 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "catalog:backfill": "node scripts/product-backfill/run.mjs",
+    "catalog:backfill:offline": "node scripts/product-backfill/run.mjs --offline --existing-snapshot",
+    "catalog:backfill:audit": "node scripts/product-backfill/audit.mjs"
   },
   "dependencies": {
     "@supabase/ssr": "^0.12.1",

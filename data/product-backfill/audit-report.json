@@ -1,0 +1,620 @@
+{
+  "audited_at": "2026-07-22T13:39:41.232Z",
+  "candidate_count": 2271,
+  "by_maker": {
+    "バンダイ": 1072,
+    "タカラトミーアーツ": 1072,
+    "キタンクラブ": 7,
+    "Qualia": 120
+  },
+  "by_release_year": {
+    "2023": 98,
+    "2024": 337,
+    "2025": 1118,
+    "2026": 718
+  },
+  "by_release_month": {
+    "2026-07": 44,
+    "2026-06": 77,
+    "2026-05": 81,
+    "2026-04": 64,
+    "2026-02": 164,
+    "2026-01": 157,
+    "2025-12": 201,
+    "2025-11": 194,
+    "2025-10": 192,
+    "2025-09": 170,
+    "2025-08": 178,
+    "2025-07": 36,
+    "2025-06": 30,
+    "2025-05": 22,
+    "2025-04": 21,
+    "2025-03": 20,
+    "2025-02": 33,
+    "2026-03": 131,
+    "2025-01": 21,
+    "2024-11": 35,
+    "2024-10": 36,
+    "2024-09": 37,
+    "2024-07": 31,
+    "2024-06": 33,
+    "2024-05": 22,
+    "2024-04": 23,
+    "2024-02": 17,
+    "2024-01": 18,
+    "2023-12": 22,
+    "2023-11": 24,
+    "2023-10": 13,
+    "2023-09": 13,
+    "2023-08": 11,
+    "2023-07": 1,
+    "2023-06": 2,
+    "2023-05": 3,
+    "2023-04": 4,
+    "2023-03": 5,
+    "2024-12": 36,
+    "2024-08": 31,
+    "2024-03": 18
+  },
+  "missing": {
+    "name": 0,
+    "maker": 0,
+    "price": 0,
+    "release_period": 0,
+    "jan_code": 1199,
+    "official_url": 0
+  },
+  "official_domain_errors": [],
+  "unnatural_rows": [],
+  "html_fragments": [],
+  "invalid_characters": [],
+  "whitespace_only_fields": [],
+  "non_capsule_rows": [],
+  "candidate_duplicates": {
+    "jan_code": 0,
+    "official_url": 0,
+    "name_maker": 0
+  },
+  "existing_duplicates": {
+    "jan_code": 0,
+    "official_url": 0,
+    "name_maker": 0
+  },
+  "current_product_columns": [
+    "category",
+    "character",
+    "character_name",
+    "created_at",
+    "creator",
+    "description",
+    "genre",
+    "id",
+    "image_url",
+    "item_count",
+    "jan_code",
+    "maker",
+    "name",
+    "official_url",
+    "price",
+    "release_month",
+    "release_period",
+    "series",
+    "series_name",
+    "source_checked_at",
+    "updated_at",
+    "work_title"
+  ],
+  "sql": {
+    "has_insert": true,
+    "insert_columns": [
+      "name",
+      "maker",
+      "work_title",
+      "series_name",
+      "character_name",
+      "genre",
+      "price",
+      "release_period",
+      "jan_code",
+      "official_url",
+      "image_url",
+      "source_checked_at"
+    ],
+    "unknown_columns": [],
+    "missing_required_name": false,
+    "destructive_update": false,
+    "destructive_delete": false,
+    "destructive_truncate": false,
+    "has_duplicate_guard": true,
+    "sql_candidate_rows": 2271
+  },
+  "selection_priority_violations": {
+    "バンダイ": 0,
+    "タカラトミーアーツ": 0
+  },
+  "excluded_unnatural_during_generation": {
+    "バンダイ": 44,
+    "タカラトミーアーツ": 2,
+    "キタンクラブ": 0,
+    "Qualia": 0
+  },
+  "samples": {
+    "バンダイ": [
+      {
+        "name": "クレヨンしんちゃん ふわふわフロッキードール",
+        "price": "300",
+        "release_period": "2026年7月",
+        "jan_code": "4582769836336000",
+        "official_url": "https://gashapon.jp/products/detail.php?jan_code=4582769836336000"
+      },
+      {
+        "name": "名探偵プリキュア! なりきりプリキュア3",
+        "price": "300",
+        "release_period": "2026年7月",
+        "jan_code": "4570118183750000",
+        "official_url": "https://gashapon.jp/products/detail.php?jan_code=4570118183750000"
+      },
+      {
+        "name": "名探偵プリキュア! プリキュアマコトジュエルコレクション3",
+        "price": "300",
+        "release_period": "2026年7月",
+        "jan_code": "4570118183774000",
+        "official_url": "https://gashapon.jp/products/detail.php?jan_code=4570118183774000"
+      },
+      {
+        "name": "“ディズニーキャラクター” Q posket(キューポスケット) ミニチュアコレクション2",
+        "price": "500",
+        "release_period": "2026年6月",
+        "jan_code": "4582769739293000",
+        "official_url": "https://gashapon.jp/products/detail.php?jan_code=4582769739293000"
+      },
+      {
+        "name": "【箱売】機動戦士ガンダム MOBILE SUIT ENSEMBLE 14",
+        "price": "550",
+        "release_period": "2026年6月",
+        "jan_code": "4549660488514000",
+        "official_url": "https://gashapon.jp/products/detail.php?jan_code=4549660488514000"
+      },
+      {
+        "name": "capsule flockies TOM and JERRY",
+        "price": "400",
+        "release_period": "2026年6月",
+        "jan_code": "4582769911651000",
+        "official_url": "https://gashapon.jp/products/detail.php?jan_code=4582769911651000"
+      },
+      {
+        "name": "duolingo めじるしアクセサリー",
+        "price": "300",
+        "release_period": "2026年6月",
+        "jan_code": "4582769775666000",
+        "official_url": "https://gashapon.jp/products/detail.php?jan_code=4582769775666000"
+      },
+      {
+        "name": "LITTLE NIGHTMARES めじるしアクセサリー",
+        "price": "400",
+        "release_period": "2026年6月",
+        "jan_code": "4582769700903000",
+        "official_url": "https://gashapon.jp/products/detail.php?jan_code=4582769700903000"
+      },
+      {
+        "name": "LOVOT [らぼっと] めじるしアクセサリー",
+        "price": "300",
+        "release_period": "2026年6月",
+        "jan_code": "4582769682148000",
+        "official_url": "https://gashapon.jp/products/detail.php?jan_code=4582769682148000"
+      },
+      {
+        "name": "ギャルなクレヨンしんちゃん",
+        "price": "300",
+        "release_period": "2026年6月",
+        "jan_code": "4582769898518000",
+        "official_url": "https://gashapon.jp/products/detail.php?jan_code=4582769898518000"
+      },
+      {
+        "name": "クレヨンしんちゃん カラフルマルチチャーム",
+        "price": "300",
+        "release_period": "2026年6月",
+        "jan_code": "4582769917271000",
+        "official_url": "https://gashapon.jp/products/detail.php?jan_code=4582769917271000"
+      },
+      {
+        "name": "サンリオキャラクターズ ナーススイングマスコット",
+        "price": "300",
+        "release_period": "2026年6月",
+        "jan_code": "4582769832444000",
+        "official_url": "https://gashapon.jp/products/detail.php?jan_code=4582769832444000"
+      },
+      {
+        "name": "ズートピア2 めじるしアクセサリー",
+        "price": "300",
+        "release_period": "2026年6月",
+        "jan_code": "4582769898105000",
+        "official_url": "https://gashapon.jp/products/detail.php?jan_code=4582769898105000"
+      },
+      {
+        "name": "ドラゴンボール めじるしアクセサリー3",
+        "price": "300",
+        "release_period": "2026年6月",
+        "jan_code": "4582769927843000",
+        "official_url": "https://gashapon.jp/products/detail.php?jan_code=4582769927843000"
+      },
+      {
+        "name": "なめこ栽培キット めじるしアクセサリー2",
+        "price": "300",
+        "release_period": "2026年6月",
+        "jan_code": "4582769935558000",
+        "official_url": "https://gashapon.jp/products/detail.php?jan_code=4582769935558000"
+      },
+      {
+        "name": "ノンタン めじるしアクセサリー",
+        "price": "300",
+        "release_period": "2026年6月",
+        "jan_code": "4582769842009000",
+        "official_url": "https://gashapon.jp/products/detail.php?jan_code=4582769842009000"
+      },
+      {
+        "name": "パワーパフ ガールズ ブリスターチャーム コレクション",
+        "price": "400",
+        "release_period": "2026年6月",
+        "jan_code": "4582769911477000",
+        "official_url": "https://gashapon.jp/products/detail.php?jan_code=4582769911477000"
+      },
+      {
+        "name": "めじるしアクセサリー サンリオキャラクターズオールスターズ Part.1",
+        "price": "300",
+        "release_period": "2026年6月",
+        "jan_code": "4582769745973000",
+        "official_url": "https://gashapon.jp/products/detail.php?jan_code=4582769745973000"
+      },
+      {
+        "name": "めじるしアクセサリー サンリオキャラクターズオールスターズ Part.2",
+        "price": "300",
+        "release_period": "2026年6月",
+        "jan_code": "4582769745980000",
+        "official_url": "https://gashapon.jp/products/detail.php?jan_code=4582769745980000"
+      },
+      {
+        "name": "メゾピアノ×ハローキティ カプセルラバーマスコット",
+        "price": "300",
+        "release_period": "2026年6月",
+        "jan_code": "4582769916700000",
+        "official_url": "https://gashapon.jp/products/detail.php?jan_code=4582769916700000"
+      }
+    ],
+    "タカラトミーアーツ": [
+      {
+        "name": "BUTTER Family ふわもこフォトホルダー",
+        "price": "400",
+        "release_period": "2026年7月(7月13日週発売)",
+        "jan_code": null,
+        "official_url": "https://www.takaratomy-arts.co.jp/items/item.html?n=Y907340"
+      },
+      {
+        "name": "CHUMSおにぎりフレンズ つながリングチャーム",
+        "price": "400",
+        "release_period": "2026年7月(7月20日週発売)",
+        "jan_code": null,
+        "official_url": "https://www.takaratomy-arts.co.jp/items/item.html?n=Y905803"
+      },
+      {
+        "name": "DUNG BEAT POSSE アクリルめじるしガチャマスコット",
+        "price": "300",
+        "release_period": "2026年7月(7月6日週発売)",
+        "jan_code": null,
+        "official_url": "https://www.takaratomy-arts.co.jp/items/item.html?n=Y906855"
+      },
+      {
+        "name": "onちゃんのフロッキーフィギュアだオン",
+        "price": "400",
+        "release_period": "2026年7月(7月13日週発売)",
+        "jan_code": null,
+        "official_url": "https://www.takaratomy-arts.co.jp/items/item.html?n=Y903977"
+      },
+      {
+        "name": "SR+ スパイダーマン -DELUXE EDITION-",
+        "price": "500",
+        "release_period": "2026年7月(7月20日週発売)",
+        "jan_code": null,
+        "official_url": "https://www.takaratomy-arts.co.jp/items/item.html?n=Y903472"
+      },
+      {
+        "name": "あそべる生物フィギュアシリーズ ガチャアクション THE恐竜 太古からのメッセージ",
+        "price": "300",
+        "release_period": "2026年7月(7月20日週発売)",
+        "jan_code": null,
+        "official_url": "https://www.takaratomy-arts.co.jp/items/item.html?n=Y902062"
+      },
+      {
+        "name": "おいんぼいん ふわふわてんしちゃん めじるしガチャマスコット",
+        "price": "300",
+        "release_period": "2026年7月(7月13日週発売)",
+        "jan_code": null,
+        "official_url": "https://www.takaratomy-arts.co.jp/items/item.html?n=Y901119"
+      },
+      {
+        "name": "お勉強タイムFig. ハイキュー!!",
+        "price": "500",
+        "release_period": "2026年7月(7月20日週発売)",
+        "jan_code": null,
+        "official_url": "https://www.takaratomy-arts.co.jp/items/item.html?n=Y900648"
+      },
+      {
+        "name": "かえるの合唱団♪",
+        "price": "300",
+        "release_period": "2026年7月(7月20日週発売)",
+        "jan_code": null,
+        "official_url": "https://www.takaratomy-arts.co.jp/items/item.html?n=Y903885"
+      },
+      {
+        "name": "くまのプーさん Hide&Seek かくれんぼフィギュア",
+        "price": "400",
+        "release_period": "2026年7月(7月6日週発売)",
+        "jan_code": null,
+        "official_url": "https://www.takaratomy-arts.co.jp/items/item.html?n=Y903137"
+      },
+      {
+        "name": "サンリオキャラクターズ くるくるヘアカーラーフィギュア",
+        "price": "300",
+        "release_period": "2026年7月(7月13日週発売)",
+        "jan_code": null,
+        "official_url": "https://www.takaratomy-arts.co.jp/items/item.html?n=Y905940"
+      },
+      {
+        "name": "サンリオキャラクターズ もこもこパンダフロッキーマスコット",
+        "price": "400",
+        "release_period": "2026年7月(7月6日週発売)",
+        "jan_code": null,
+        "official_url": "https://www.takaratomy-arts.co.jp/items/item.html?n=Y903649"
+      },
+      {
+        "name": "ソウルイーター ピンズコレクション",
+        "price": "300",
+        "release_period": "2026年7月(7月13日週発売)",
+        "jan_code": null,
+        "official_url": "https://www.takaratomy-arts.co.jp/items/item.html?n=Y904387"
+      },
+      {
+        "name": "つながリングチャーム やさいのようせい",
+        "price": "300",
+        "release_period": "2026年7月(7月13日週発売)",
+        "jan_code": null,
+        "official_url": "https://www.takaratomy-arts.co.jp/items/item.html?n=Y905483"
+      },
+      {
+        "name": "つながリングチャーム ワーリーフレンズ",
+        "price": "300",
+        "release_period": "2026年7月(7月13日週発売)",
+        "jan_code": null,
+        "official_url": "https://www.takaratomy-arts.co.jp/items/item.html?n=Y905988"
+      },
+      {
+        "name": "ディズニープリンセス バニティバックチャーム",
+        "price": "300",
+        "release_period": "2026年7月(7月20日週発売)",
+        "jan_code": null,
+        "official_url": "https://www.takaratomy-arts.co.jp/items/item.html?n=Y904820"
+      },
+      {
+        "name": "トップハム・ハット卿 めじるしガチャマスコット",
+        "price": "400",
+        "release_period": "2026年7月(7月20日週発売)",
+        "jan_code": null,
+        "official_url": "https://www.takaratomy-arts.co.jp/items/item.html?n=Y903182"
+      },
+      {
+        "name": "トミカ BOX型シリコンポーチ",
+        "price": "400",
+        "release_period": "2026年7月(7月6日週発売)",
+        "jan_code": null,
+        "official_url": "https://www.takaratomy-arts.co.jp/items/item.html?n=Y907647"
+      },
+      {
+        "name": "トムとジェリー 天使と悪魔めじるしガチャマスコット",
+        "price": "400",
+        "release_period": "2026年7月(7月20日週発売)",
+        "jan_code": null,
+        "official_url": "https://www.takaratomy-arts.co.jp/items/item.html?n=Y901508"
+      },
+      {
+        "name": "ハリー・ポッター/ファンタスティック・ビースト 魔法生物 めじるしガチャマスコット",
+        "price": "400",
+        "release_period": "2026年7月(7月13日週発売)",
+        "jan_code": null,
+        "official_url": "https://www.takaratomy-arts.co.jp/items/item.html?n=Y904271"
+      }
+    ],
+    "キタンクラブ": [
+      {
+        "name": "こぼすシリーズ おみそしる-ネコ編-",
+        "price": "500",
+        "release_period": "2026年7月中旬",
+        "jan_code": null,
+        "official_url": "https://kitan.jp/products/kobosu_neko"
+      },
+      {
+        "name": "ばあちゃんちの昭和レトロライト",
+        "price": "500",
+        "release_period": "2026年7月上旬",
+        "jan_code": null,
+        "official_url": "https://kitan.jp/products/baachan_retro"
+      },
+      {
+        "name": "What’s Michael? アクリルキーホルダー",
+        "price": "400",
+        "release_period": "2026年6月下旬",
+        "jan_code": null,
+        "official_url": "https://kitan.jp/products/whatsmaichael_a"
+      },
+      {
+        "name": "えんぴつけずり森の家® ミニチュアマスコット",
+        "price": "500",
+        "release_period": "2026年6月下旬",
+        "jan_code": null,
+        "official_url": "https://kitan.jp/products/morinoie_enpitsu"
+      },
+      {
+        "name": "サンリオキャラクターズ ダンボールウォッチ3",
+        "price": "500",
+        "release_period": "2026年6月下旬",
+        "jan_code": null,
+        "official_url": "https://kitan.jp/products/sanrio_watch3"
+      },
+      {
+        "name": "ひまのかたまり ひま太郎 毛糸であそぼうフィギュア",
+        "price": "500",
+        "release_period": "2026年6月下旬",
+        "jan_code": null,
+        "official_url": "https://kitan.jp/products/himataro_figure"
+      },
+      {
+        "name": "ムキムキのハムちゃん フィギュアマスコット2",
+        "price": "400",
+        "release_period": "2026年6月下旬",
+        "jan_code": null,
+        "official_url": "https://kitan.jp/products/mkmkhamuchan_2"
+      }
+    ],
+    "Qualia": [
+      {
+        "name": "bou -ボウ- そばにいてくれるぬいぐるみ",
+        "price": "500",
+        "release_period": "2026年7月",
+        "jan_code": null,
+        "official_url": "https://www.qualia-45.jp/product/view/1967"
+      },
+      {
+        "name": "イタリアンブレインロット アクリルキーホルダー",
+        "price": "300",
+        "release_period": "2026年7月",
+        "jan_code": null,
+        "official_url": "https://www.qualia-45.jp/product/view/1849"
+      },
+      {
+        "name": "いやしのペット シャカシャカアクリルキーホルダー",
+        "price": "400",
+        "release_period": "2026年7月",
+        "jan_code": null,
+        "official_url": "https://www.qualia-45.jp/product/view/1963"
+      },
+      {
+        "name": "ギーモ スタンドフィギュア",
+        "price": "400",
+        "release_period": "2026年7月",
+        "jan_code": null,
+        "official_url": "https://www.qualia-45.jp/product/view/1964"
+      },
+      {
+        "name": "なかよしラッコ フロッキーキーホルダー",
+        "price": "400",
+        "release_period": "2026年7月",
+        "jan_code": null,
+        "official_url": "https://www.qualia-45.jp/product/view/1957"
+      },
+      {
+        "name": "にっこりーノ 日本妖怪のぬいぐるみ",
+        "price": "400",
+        "release_period": "2026年7月",
+        "jan_code": null,
+        "official_url": "https://www.qualia-45.jp/product/view/1852"
+      },
+      {
+        "name": "洗われた猫 ぬいぐるみ",
+        "price": "500",
+        "release_period": "2026年7月",
+        "jan_code": null,
+        "official_url": "https://www.qualia-45.jp/product/view/1969"
+      },
+      {
+        "name": "通勤ねこ マスコットボールチェーン(第一弾)",
+        "price": "300",
+        "release_period": "2026年7月",
+        "jan_code": null,
+        "official_url": "https://www.qualia-45.jp/product/view/1544"
+      },
+      {
+        "name": "木彫りのネコのペンおき®",
+        "price": "400",
+        "release_period": "2026年7月",
+        "jan_code": null,
+        "official_url": "https://www.qualia-45.jp/product/view/1961"
+      },
+      {
+        "name": "ダッシュはにわ プルバックフィギュア",
+        "price": "400",
+        "release_period": "2026年6月",
+        "jan_code": null,
+        "official_url": "https://www.qualia-45.jp/product/view/1945"
+      },
+      {
+        "name": "リアル恐竜ヘッドコレクション",
+        "price": "500",
+        "release_period": "2026年6月",
+        "jan_code": null,
+        "official_url": "https://www.qualia-45.jp/product/view/1692"
+      },
+      {
+        "name": "羽付き餃子 マスコットボールチェーン",
+        "price": "300",
+        "release_period": "2026年6月",
+        "jan_code": null,
+        "official_url": "https://www.qualia-45.jp/product/view/1946"
+      },
+      {
+        "name": "木彫りのべこ2 マスコットフィギュア",
+        "price": "400",
+        "release_period": "2026年6月",
+        "jan_code": null,
+        "official_url": "https://www.qualia-45.jp/product/view/1947"
+      },
+      {
+        "name": "どこのこ?ナンのこ ぬいぐるみマスコット",
+        "price": "400",
+        "release_period": "2026年5月",
+        "jan_code": null,
+        "official_url": "https://www.qualia-45.jp/product/view/1926"
+      },
+      {
+        "name": "まんぷくdeスプーン マスコットフィギュア",
+        "price": "300",
+        "release_period": "2026年5月",
+        "jan_code": null,
+        "official_url": "https://www.qualia-45.jp/product/view/1927"
+      },
+      {
+        "name": "推しカツ マスコットフィギュア",
+        "price": "300",
+        "release_period": "2026年5月",
+        "jan_code": null,
+        "official_url": "https://www.qualia-45.jp/product/view/1928"
+      },
+      {
+        "name": "イタリアンブレインロット アクリルキーホルダー2",
+        "price": "300",
+        "release_period": "2026年4月",
+        "jan_code": null,
+        "official_url": "https://www.qualia-45.jp/product/view/1903"
+      },
+      {
+        "name": "エイエイオー マスコットフィギュア",
+        "price": "300",
+        "release_period": "2026年4月",
+        "jan_code": null,
+        "official_url": "https://www.qualia-45.jp/product/view/1893"
+      },
+      {
+        "name": "ゴリランドセル おんなのこバージョン マスコットフィギュア3",
+        "price": "400",
+        "release_period": "2026年4月",
+        "jan_code": null,
+        "official_url": "https://www.qualia-45.jp/product/view/1901"
+      },
+      {
+        "name": "にっこりーノ キャンプのぬいぐるみ2 ニューカラーバージョン",
+        "price": "400",
+        "release_period": "2026年4月",
+        "jan_code": null,
+        "official_url": "https://www.qualia-45.jp/product/view/1906"
+      }
+    ]
+  }
+}
