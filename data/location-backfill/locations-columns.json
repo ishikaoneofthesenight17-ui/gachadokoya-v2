@@ -1,0 +1,22 @@
+[
+  "address",
+  "business_hours",
+  "candidate_reason",
+  "category",
+  "chain_name",
+  "created_at",
+  "id",
+  "image_url",
+  "latitude",
+  "longitude",
+  "name",
+  "nearest_station",
+  "official_url",
+  "prefecture",
+  "source_checked_at",
+  "source_type",
+  "updated_at",
+  "user_note",
+  "verification_status",
+  "verified_at"
+]

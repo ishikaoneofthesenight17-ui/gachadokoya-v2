@@ -5,3 +5,7 @@ node_modules
 *.tsbuildinfo
 data/product-backfill/html/*
 !data/product-backfill/html/README.md
+data/location-backfill/html/*
+!data/location-backfill/html/README.md
+data/location-backfill/existing-locations.json
+data/location-coordinate-repair/current-locations.json

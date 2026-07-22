@@ -14,7 +14,12 @@
     "typecheck": "tsc --noEmit",
     "catalog:backfill": "node scripts/product-backfill/run.mjs",
     "catalog:backfill:offline": "node scripts/product-backfill/run.mjs --offline --existing-snapshot",
-    "catalog:backfill:audit": "node scripts/product-backfill/audit.mjs"
+    "catalog:backfill:audit": "node scripts/product-backfill/audit.mjs",
+    "locations:backfill": "node scripts/location-backfill/run.mjs",
+    "locations:backfill:offline": "node scripts/location-backfill/run.mjs --offline --existing-snapshot",
+    "locations:backfill:audit": "node scripts/location-backfill/audit.mjs",
+    "locations:coordinates:repair": "node scripts/location-backfill/repair-missing-coordinates.mjs",
+    "locations:coordinates:repair:offline": "node scripts/location-backfill/repair-missing-coordinates.mjs --offline"
   },
   "dependencies": {
     "@supabase/ssr": "^0.12.1",
